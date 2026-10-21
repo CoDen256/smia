@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: smia
+      POSTGRES_PASSWORD: smia
+      POSTGRES_DB: smia
+    ports:
+      - "5433:5432"
+    volumes:
+      - smia-pg-data:/var/lib/postgresql/data
+
+volumes:
+  smia-pg-data:

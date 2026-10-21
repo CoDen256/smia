@@ -1,17 +1,17 @@
 ## 1. Service skeleton
 
-- [ ] 1.1 Scaffold the Python service (Flask-style, matching phonexa's pattern) with its own Postgres database and `alembic` migrations setup
-- [ ] 1.2 Implement shared-bearer-token auth middleware, token from env config
-- [ ] 1.3 Set up project structure for provider adapters (one module per provider) and a provider registry keyed by kind
+- [x] 1.1 Scaffold the Python service (Flask-style, matching phonexa's pattern) with its own Postgres database and `alembic` migrations setup
+- [x] 1.2 Implement shared-bearer-token auth middleware, token from env config
+- [x] 1.3 Set up project structure for provider adapters (one module per provider) and a provider registry keyed by kind
 
 ## 2. Lookup-cache core
 
-- [ ] 2.1 Design and migrate the cache table: `(kind, provider, input_hash)` unique key, `payload` jsonb, `created_at`
-- [ ] 2.2 Implement canonical input hashing (`sha256(kind, provider, normalized_input)`)
-- [ ] 2.3 Implement the shared runner: cache lookup → on miss, invoke the named provider adapter → store → return
-- [ ] 2.4 Implement the "provider required unless kind has exactly one configured" validation rule
-- [ ] 2.5 Implement generic `GET /<kind>/{id}` fetch-by-id (cache-only, no provider invocation, 404 on miss)
-- [ ] 2.6 Write tests for idempotent POST, cache-miss-on-different-provider, and no-fallback-on-failure behavior
+- [x] 2.1 Design and migrate the cache table: `(kind, provider, input_hash)` unique key, `payload` jsonb, `created_at`
+- [x] 2.2 Implement canonical input hashing (`sha256(kind, provider, normalized_input)`)
+- [x] 2.3 Implement the shared runner: cache lookup → on miss, invoke the named provider adapter → store → return
+- [x] 2.4 Implement the "provider required unless kind has exactly one configured" validation rule
+- [x] 2.5 Implement generic `GET /<kind>/{id}` fetch-by-id (cache-only, no provider invocation, 404 on miss)
+- [x] 2.6 Write tests for idempotent POST, cache-miss-on-different-provider, and no-fallback-on-failure behavior
 
 ## 3. `/inflections`
 

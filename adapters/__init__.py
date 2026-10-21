@@ -1,0 +1,10 @@
+"""
+adapters/ — one module per provider (CLAUDE.md: provider chains are
+declarative config, not code paths). Each module registers its adapter(s)
+with `registry.registry` at import time (see `adapters/base.py` for the
+interface) and `app.py` imports every adapter module once at startup so
+registration happens before the first request.
+
+No adapters are registered yet — real providers land in later tasks
+(/inflections' `ordbank`/`kaikki`, etc).
+"""
