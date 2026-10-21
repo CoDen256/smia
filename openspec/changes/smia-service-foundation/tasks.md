@@ -45,12 +45,12 @@
 
 ## 6. `/translations`
 
-- [ ] 6.1 Port `TranslatorFactory`/`google.ts` scrape logic into a Python adapter
-- [ ] 6.2 Port `bing.ts` scrape logic into a Python adapter
-- [ ] 6.3 Implement the DeepL free-tier API adapter
-- [ ] 6.4 Implement the LibreTranslate API adapter
-- [ ] 6.5 Probe dict.cc's translation data (scrape) and implement it as a `/translations` provider, surfacing meaning-specific entries as `context`
-- [ ] 6.6 Wire `POST /translations` + `GET /translations/{id}` — response is `{provider, text, context?}` only, no `lang`/`transliteration`/`transcription`
+- [x] 6.1 Port `TranslatorFactory`/`google.ts` scrape logic into a Python adapter — live-tested call hit Google's anti-automation block (429) from this sandbox's IP; request/response shapes verified against mocked fixtures matching `google/types.ts`
+- [x] 6.2 Port `bing.ts` scrape logic into a Python adapter — live-tested call found `edge.microsoft.com/translate/auth` now 404s (endpoint likely moved/retired since `bing.ts` was last verified); ported faithfully and verified against mocked fixtures matching `bing/types.ts`
+- [x] 6.3 Implement the DeepL free-tier API adapter — fully implemented against DeepL's public documented API; errors clearly pending a `DEEPL_API_KEY` this environment doesn't have
+- [x] 6.4 Implement the LibreTranslate API adapter — configurable instance URL; libretranslate.com now requires its own API key and the public mirrors probed were all down, a known instability of community-run instances
+- [ ] 6.5 Probe dict.cc's translation data (scrape) and implement it as a `/translations` provider, surfacing meaning-specific entries as `context` — **blocked: same obfuscated anti-bot JS loader found probing dict.cc for 5.3**; stubbed via `adapters/not_configured.py`, per direction given for the /tts section
+- [x] 6.6 Wire `POST /translations` + `GET /translations/{id}` — response is `{provider, text, context?}` only, no `lang`/`transliteration`/`transcription`
 
 ## 7. `/stt`
 

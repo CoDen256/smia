@@ -71,6 +71,15 @@ def get_tts(key):
     return jsonify({"error": "not found"}), 404
 
 
+def _extract_translations_input(body: dict) -> dict:
+    if "text" not in body or "from" not in body or "to" not in body:
+        raise ValueError("text, from, and to are required")
+    return {"text": body["text"], "from": body["from"], "to": body["to"]}
+
+
+register_lookup_routes(app, "translations", _extract_translations_input)
+
+
 @app.route("/health", methods=["GET"])
 def health():
     # Per-provider last-success/last-failure/quota tracking lands with

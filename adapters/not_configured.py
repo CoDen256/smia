@@ -39,3 +39,8 @@ registry.register("tts", "filmot", NotConfiguredAdapter("filmot", "needs a filmo
 registry.register(
     "tts", "dictcc", NotConfiguredAdapter("dictcc", "audio delivery is behind obfuscated anti-bot JS")
 )
+registry.register(
+    "translations",
+    "dictcc",
+    NotConfiguredAdapter("dictcc", "page content is behind obfuscated anti-bot JS"),
+)
