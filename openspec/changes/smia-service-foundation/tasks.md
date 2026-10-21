@@ -26,12 +26,12 @@
 
 ## 4. `/ipa`
 
-- [ ] 4.1 Import the NST NOFABET lexicon (`providers/nbno/nb_uttale_tillegg/original_nst_lexicon_nofabet.csv`) and port the bundled NOFABET→IPA conversion table (`conversion.py`)
-- [ ] 4.2 Import the dialect CSVs (`nb_uttale_leksika.zip`) and map each dialect code onto a `variety` value; wire multi-candidate dialect lookups
-- [ ] 4.3 Import the kaikki.org dump's `sounds[].ipa` field as a queryable table
-- [ ] 4.4 Implement the ordbokene.no API adapter (`body.pronunciation`)
-- [ ] 4.5 Implement the ipa-dict/nb and wikipron thin-fallback adapters
-- [ ] 4.6 Wire `POST /ipa` + `GET /ipa/{id}`, returning `candidates[]` (one per variety) across all configured providers — no espeak-ng, no g2p fallback
+- [x] 4.1 Import the NST NOFABET lexicon (`providers/nbno/nb_uttale_tillegg/original_nst_lexicon_nofabet.csv`) and port the bundled NOFABET→IPA conversion table (`conversion.py`)
+- [x] 4.2 Import the dialect CSVs (`nb_uttale_leksika.zip`) and map each dialect code onto a `variety` value; wire multi-candidate dialect lookups
+- [x] 4.3 Import the kaikki.org dump's `sounds[].ipa` field as a queryable table
+- [x] 4.4 Implement the ordbokene.no API adapter (`body.pronunciation`)
+- [x] 4.5 Implement the ipa-dict/nb and wikipron thin-fallback adapters
+- [x] 4.6 Wire `POST /ipa` + `GET /ipa/{id}`, returning `candidates[]` (one per variety) across all configured providers — no espeak-ng, no g2p fallback
 
 ## 5. `/tts`
 

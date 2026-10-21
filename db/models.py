@@ -117,3 +117,58 @@ class OrdbankFullform(Base):
     fradato: Mapped[str] = mapped_column(Text, nullable=False)
     tildato: Mapped[str] = mapped_column(Text, nullable=False)
     normering: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+# ── NST pronunciation lexicon import (task 4.1-4.2) ──────────────────────
+
+
+class NstLexicon(Base):
+    """The standard (Eastern-Norwegian-formal) NST NOFABET lexicon —
+    `providers/nbno/nb_uttale_tillegg/original_nst_lexicon_nofabet.csv`.
+    `ipa` is computed at import time via the ported conversion table
+    (`adapters/_nofabet_conversion.py`), not at query time."""
+
+    __tablename__ = "nst_lexicon"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    wordform: Mapped[str] = mapped_column(Text, nullable=False)
+    nofabet: Mapped[str] = mapped_column(Text, nullable=False)
+    ipa: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class NstDialect(Base):
+    """Dialect-variant pronunciations from `nb_uttale_leksika.zip` — five
+    dialect areas (`e`=Eastern, `sw`=Southwestern, `w`=Western, `t`=Central/
+    Trøndelag, `n`=Northern Norway, per `NB_Uttale_Work_on_Dialects.pdf`)
+    each with a `written`/`spoken` register variant. `ipa` ships
+    precomputed in the source files — no conversion needed here."""
+
+    __tablename__ = "nst_dialect"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    wordform: Mapped[str] = mapped_column(Text, nullable=False)
+    dialect_area: Mapped[str] = mapped_column(Text, nullable=False)
+    register: Mapped[str] = mapped_column(Text, nullable=False)
+    ipa: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class IpaDictEntry(Base):
+    """ipa-dict/nb (`providers/open-dict/nb.txt`) — a thin lemma-only
+    fallback `/ipa` provider."""
+
+    __tablename__ = "ipa_dict_entry"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    wordform: Mapped[str] = mapped_column(Text, nullable=False)
+    ipa: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class WikipronEntry(Base):
+    """wikipron's bundled `nob_latn_broad.tsv` — another thin fallback
+    `/ipa` provider."""
+
+    __tablename__ = "wikipron_entry"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    wordform: Mapped[str] = mapped_column(Text, nullable=False)
+    ipa: Mapped[str] = mapped_column(Text, nullable=False)

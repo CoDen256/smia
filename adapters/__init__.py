@@ -9,3 +9,8 @@ registration happens before the first request.
 
 from . import ordbank  # noqa: F401
 from . import kaikki  # noqa: F401
+from . import nst  # noqa: F401
+from . import kaikki_ipa  # noqa: F401
+from . import ordbokene  # noqa: F401
+from . import ipadict  # noqa: F401
+from . import wikipron  # noqa: F401

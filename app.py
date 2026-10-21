@@ -31,6 +31,15 @@ def _extract_inflections_input(body: dict) -> dict:
 register_lookup_routes(app, "inflections", _extract_inflections_input)
 
 
+def _extract_ipa_input(body: dict) -> dict:
+    if "text" not in body or "lang" not in body:
+        raise ValueError("text and lang are required")
+    return {"text": body["text"], "lang": body["lang"]}
+
+
+register_lookup_routes(app, "ipa", _extract_ipa_input)
+
+
 @app.route("/health", methods=["GET"])
 def health():
     # Per-provider last-success/last-failure/quota tracking lands with
