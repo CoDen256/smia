@@ -15,14 +15,14 @@
 
 ## 3. `/inflections`
 
-- [ ] 3.1 Write the Norsk Ordbank import job: parse `fullformsliste.txt`, `lemma.txt`, `paradigme.txt`, `boying.txt` from `providers/nbno/` into Postgres tables
-- [ ] 3.2 Implement the reverse lookup: surface form (`OPPSLAG`) → grouped candidates across `LEMMA_ID`/`PARADIGME_ID`
-- [ ] 3.3 Implement paradigm shape mapping (`BOY_GRUPPE`/`BOY_NUMMER` → `substantiv`/`adjektiv`/`verb`/`adverb` shapes from design.md), including the adverb `komparativ`/`superlativ` split (present only for the "adjektiv, adverbtype" paradigm group, absent for plain invariable `adverb`-group paradigms)
-- [ ] 3.4 Implement the `ordbank` provider adapter and wire `POST /inflections` + `GET /inflections/{id}`
-- [ ] 3.5 Verify an ambiguous word (e.g. `skinner`) returns multiple candidates end-to-end
-- [ ] 3.6 Import the kaikki.org dump's `forms[]` field as a queryable table, filtering out `imperative`/`passive`-tagged entries
-- [ ] 3.7 Implement the `kaikki` provider adapter, mapping surviving `forms[]` tags onto the paradigm shapes from 3.3
-- [ ] 3.8 Confirm `provider` is now a required field (two providers configured) and update validation accordingly
+- [x] 3.1 Write the Norsk Ordbank import job: parse `fullformsliste.txt`, `lemma.txt`, `paradigme.txt`, `boying.txt` from `providers/nbno/` into Postgres tables
+- [x] 3.2 Implement the reverse lookup: surface form (`OPPSLAG`) → grouped candidates across `LEMMA_ID`/`PARADIGME_ID`
+- [x] 3.3 Implement paradigm shape mapping (`BOY_GRUPPE`/`BOY_NUMMER` → `substantiv`/`adjektiv`/`verb`/`adverb` shapes from design.md), including the adverb `komparativ`/`superlativ` split (present only for the "adjektiv, adverbtype" paradigm group, absent for plain invariable `adverb`-group paradigms)
+- [x] 3.4 Implement the `ordbank` provider adapter and wire `POST /inflections` + `GET /inflections/{id}`
+- [x] 3.5 Verify an ambiguous word (e.g. `skinner`) returns multiple candidates end-to-end
+- [x] 3.6 Import the kaikki.org dump's `forms[]` field as a queryable table, filtering out `imperative`/`passive`-tagged entries
+- [x] 3.7 Implement the `kaikki` provider adapter, mapping surviving `forms[]` tags onto the paradigm shapes from 3.3
+- [x] 3.8 Confirm `provider` is now a required field (two providers configured) and update validation accordingly
 
 ## 4. `/ipa`
 

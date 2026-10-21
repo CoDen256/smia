@@ -5,6 +5,7 @@ with `registry.registry` at import time (see `adapters/base.py` for the
 interface) and `app.py` imports every adapter module once at startup so
 registration happens before the first request.
 
-No adapters are registered yet — real providers land in later tasks
-(/inflections' `ordbank`/`kaikki`, etc).
 """
+
+from . import ordbank  # noqa: F401
+from . import kaikki  # noqa: F401

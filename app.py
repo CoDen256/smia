@@ -19,6 +19,16 @@ CORS(app)
 register_auth(app)
 
 import adapters  # noqa: F401,E402  (imported for registration side-effects only)
+from routes.generic import register_lookup_routes  # noqa: E402
+
+
+def _extract_inflections_input(body: dict) -> dict:
+    if "word" not in body or "lang" not in body:
+        raise ValueError("word and lang are required")
+    return {"word": body["word"], "lang": body["lang"]}
+
+
+register_lookup_routes(app, "inflections", _extract_inflections_input)
 
 
 @app.route("/health", methods=["GET"])
