@@ -54,8 +54,8 @@
 
 ## 7. `/stt`
 
-- [ ] 7.1 Port `transcribeViaHuggingFace` logic from `phonexa/js/shadow.js` into a Python adapter (`hf_whisper`)
-- [ ] 7.2 Wire `POST /stt` (multipart audio body) + `GET /stt/{id}`, with `provider` validated as required even though only one is configured
+- [x] 7.1 Port `transcribeViaHuggingFace` logic from `phonexa/js/shadow.js` into a Python adapter (`hf_whisper`) — fully implemented, errors clearly pending an `HF_TOKEN` this environment doesn't have
+- [x] 7.2 Wire `POST /stt` (multipart audio body) + `GET /stt/{id}`, with `provider` validated as required even though only one is configured
 
 ## 8. Provider catalog & `/ui`
 

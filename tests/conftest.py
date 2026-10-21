@@ -9,6 +9,16 @@ from db.models import Base, LookupCache, TtsAudio
 from db.session import get_sessionmaker
 import registry as registry_module
 
+# Importing `adapters` here (once, at collection time) runs every real
+# adapter module's `registry.register(...)` call — the same side-effect
+# `app.py` relies on. Snapshotting the resulting registry state lets
+# `fresh_registry` restore *this* baseline before each test instead of
+# wiping it to empty, so Flask-based tests that exercise the real `app`
+# (e.g. test_stt.py) still see real providers registered, while tests that
+# register their own throwaway test-kind adapters still get isolation.
+import adapters  # noqa: E402,F401
+_BASELINE_ADAPTERS = {kind: dict(providers) for kind, providers in registry_module.registry._adapters.items()}
+
 
 @pytest.fixture(autouse=True)
 def clean_db():
@@ -27,4 +37,7 @@ def fresh_registry():
     # registry`, binding its own name to this object, so a reassignment
     # here wouldn't be visible to them.
     registry_module.registry._adapters.clear()
+    registry_module.registry._adapters.update(
+        {kind: dict(providers) for kind, providers in _BASELINE_ADAPTERS.items()}
+    )
     yield

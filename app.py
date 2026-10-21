@@ -9,7 +9,10 @@ Run: `flask --app app run` (dev) with DATABASE_URL and SMIA_AUTH_TOKEN set.
 
 from __future__ import annotations
 
-from flask import Flask, Response, jsonify
+import base64
+import hashlib
+
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 
 import audio_cache
@@ -78,6 +81,57 @@ def _extract_translations_input(body: dict) -> dict:
 
 
 register_lookup_routes(app, "translations", _extract_translations_input)
+
+
+@app.route("/stt", methods=["POST"])
+def post_stt():
+    from cache import ProviderLookupError, run_lookup
+    from registry import ProviderRequiredError, UnknownProviderError, registry
+
+    # /stt's request body is multipart audio, not JSON (tasks.md 7.2) — a
+    # genuinely different shape from every other kind, so this bypasses
+    # routes/generic.py's JSON-body _post entirely. `provider` is required
+    # per request regardless of how many providers are configured (D17 /
+    # proposal's explicit "{provider} (always required, even with one
+    # provider configured)" — `/stt` deliberately opts out of the
+    # lookup-cache's usual "optional when exactly one" default), checked
+    # here before registry.resolve_provider ever gets a chance to default it.
+    audio_file = request.files.get("audio")
+    if audio_file is None:
+        return jsonify({"error": "audio file is required (multipart field 'audio')"}), 400
+    provider = request.form.get("provider")
+    if not provider:
+        return jsonify({"error": "provider is required", "available": registry.providers_for("stt")}), 400
+    lang = request.form.get("lang")
+
+    audio_bytes = audio_file.read()
+    input_dict = {
+        "audio_sha256": hashlib.sha256(audio_bytes).hexdigest(),
+        "audio_b64": base64.b64encode(audio_bytes).decode("ascii"),
+        "lang": lang,
+    }
+
+    with session_scope() as db:
+        try:
+            payload, rid, _ = run_lookup(db, "stt", provider, input_dict)
+        except ProviderRequiredError as exc:
+            return jsonify({"error": "provider is required", "available": exc.available}), 400
+        except UnknownProviderError as exc:
+            return jsonify({"error": "unknown provider", "available": exc.available}), 400
+        except ProviderLookupError as exc:
+            return jsonify({"error": str(exc)}), 502
+        response = jsonify(payload)
+        response.headers["Location"] = f"/stt/{rid}"
+        return response, 200
+
+
+@app.route("/stt/<rid>", methods=["GET"])
+def get_stt(rid):
+    with session_scope() as db:
+        payload = cache.fetch_by_id(db, "stt", rid)
+    if payload is None:
+        return jsonify({"error": "not found"}), 404
+    return jsonify(payload), 200
 
 
 @app.route("/health", methods=["GET"])
