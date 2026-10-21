@@ -66,6 +66,6 @@
 
 ## 9. Documentation follow-up
 
-- [ ] 9.1 Update `tun/docs/06-smia.md`'s endpoint table to reflect the no-fallback/single-provider model and finalized provider lists
-- [ ] 9.2 Resolve `tun/docs/09-open-questions.md` Q10 with a pointer to this change's ordbank schema work
-- [ ] 9.3 Add a new decision row to `tun/docs/07-decisions.md` recording the no-fallback-chain design (supersedes the chain-with-fallback framing implied by D34)
+- [x] 9.1 Update `tun/docs/06-smia.md`'s endpoint table to reflect the no-fallback/single-provider model and finalized provider lists
+- [x] 9.2 Resolve `tun/docs/09-open-questions.md` Q10 with a pointer to this change's ordbank schema work
+- [x] 9.3 Add a new decision row to `tun/docs/07-decisions.md` recording the no-fallback-chain design (supersedes the chain-with-fallback framing implied by D34)
