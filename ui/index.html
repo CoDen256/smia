@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>smia — linguistics service</title>
+  <link rel="stylesheet" href="/ui/ui.css">
+</head>
+<body>
+
+<header>
+  <h1>smia</h1>
+  <p>Provider health · cache stats · manual try-it</p>
+  <nav>
+    <!-- D46: shared header/nav, one domain by path — placeholders until
+         tun's reverse proxy wires the real sibling paths. -->
+    <a href="/">tun</a>
+    <a href="/phonexa/">phonexa</a>
+    <a href="/stabbur/">stabbur</a>
+    <a href="/ui">smia (this page)</a>
+  </nav>
+  <label for="tokenInput">Bearer token</label>
+  <input id="tokenInput" type="password" placeholder="shared smia token (D-S6)" autocomplete="off">
+</header>
+
+<div class="page">
+
+  <section>
+    <h2>Provider catalog</h2>
+    <table>
+      <thead><tr><th>Kind</th><th>Providers</th></tr></thead>
+      <tbody id="catalog"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Provider health</h2>
+    <table>
+      <thead>
+        <tr><th>Kind</th><th>Provider</th><th>Requests</th><th>Cache hit rate</th><th>Last success</th><th>Last failure</th></tr>
+      </thead>
+      <tbody id="health"></tbody>
+    </table>
+    <button id="refreshBtn" type="button">Refresh</button>
+  </section>
+
+  <section>
+    <h2>Manual try-it</h2>
+    <p class="muted">Always bypasses the cache (provider-catalog spec) so a stale/missing entry never hides whether a provider is currently working.</p>
+    <form id="tryForm">
+      <label for="tryKind">Kind</label>
+      <select id="tryKind"></select>
+      <label for="tryProvider">Provider</label>
+      <select id="tryProvider"></select>
+      <label for="tryBody">Request body (JSON, minus "provider"/"forceRefresh")</label>
+      <textarea id="tryBody" placeholder='{"word": "hus", "lang": "nb"}'></textarea>
+      <button type="submit">Send</button>
+    </form>
+    <pre id="tryResult"></pre>
+  </section>
+
+</div>
+
+<script src="/ui/ui.js"></script>
+</body>
+</html>

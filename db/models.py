@@ -163,6 +163,26 @@ class IpaDictEntry(Base):
     ipa: Mapped[str] = mapped_column(Text, nullable=False)
 
 
+class ProviderHealth(Base):
+    """Backs `GET /health` (task 8.2) — purely informational counters/
+    timestamps per `(kind, provider)`, never read by the lookup-cache
+    runner to make routing decisions (provider-catalog spec: health must
+    not influence which provider a request uses)."""
+
+    __tablename__ = "provider_health"
+    __table_args__ = (UniqueConstraint("kind", "provider", name="uq_provider_health_kind_provider"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    requests_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    success_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    failure_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_success_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_failure_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_failure_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
 class TtsAudio(Base):
     """smia's private, content-addressed audio cache (task 5.1) — distinct
     from `LookupCache`'s metadata-only rows and from stabbur's canonical

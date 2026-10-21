@@ -59,10 +59,10 @@
 
 ## 8. Provider catalog & `/ui`
 
-- [ ] 8.1 Implement `GET /providers` (static catalog per kind from registered adapters)
-- [ ] 8.2 Implement `GET /health` (per-provider last-success/last-failure/quota tracking)
-- [ ] 8.3 Build the `/ui` page: provider health display, cache hit-rate stats, manual try-it (bypasses cache) against any registered provider
-- [ ] 8.4 Wire `/ui` into the shared cross-service nav shell per D46
+- [x] 8.1 Implement `GET /providers` (static catalog per kind from registered adapters)
+- [x] 8.2 Implement `GET /health` (per-provider last-success/last-failure/quota tracking) — no quota tracking yet (no provider currently surfaces quota data to track); requests/success/failure counts and timestamps are real
+- [x] 8.3 Build the `/ui` page: provider health display, cache hit-rate stats, manual try-it (bypasses cache) against any registered provider
+- [x] 8.4 Wire `/ui` into the shared cross-service nav shell per D46 — vendored plain CSS/JS (no framework/package, matching phonexa's own UIs); nav links to sibling service paths are placeholders since no actual cross-repo shared header component exists yet to wire into (none of phonexa/stabbur/mjolnir have built one either)
 
 ## 9. Documentation follow-up
 

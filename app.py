@@ -12,7 +12,7 @@ from __future__ import annotations
 import base64
 import hashlib
 
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 import audio_cache
@@ -135,10 +135,22 @@ def get_stt(rid):
 
 
 @app.route("/health", methods=["GET"])
-def health():
-    # Per-provider last-success/last-failure/quota tracking lands with
-    # provider-catalog (task 8.2) — placeholder shape for now.
-    return jsonify({})
+def get_health():
+    import health as health_module
+
+    with session_scope() as db:
+        return jsonify(health_module.get_all(db))
+
+
+@app.route("/ui", methods=["GET"])
+@app.route("/ui/", methods=["GET"])
+def ui_index():
+    return send_from_directory("ui", "index.html")
+
+
+@app.route("/ui/<path:filename>", methods=["GET"])
+def ui_asset(filename):
+    return send_from_directory("ui", filename)
 
 
 @app.route("/providers", methods=["GET"])

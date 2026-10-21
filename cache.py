@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 
+import health
 from db.models import LookupCache
 from registry import registry
 
@@ -45,6 +46,7 @@ def run_lookup(db, kind: str, requested_provider: str | None, input_dict: dict, 
     provider = registry.resolve_provider(kind, requested_provider)
     ihash = input_hash(input_dict)
     rid = resource_id(kind, provider, ihash)
+    health.record_request(db, kind, provider)
 
     if not force_refresh:
         row = db.get(LookupCache, rid)
@@ -52,7 +54,12 @@ def run_lookup(db, kind: str, requested_provider: str | None, input_dict: dict, 
             return row.payload, rid, True
 
     adapter = registry.adapter_for(kind, provider)
-    result = adapter.lookup(input_dict)
+    try:
+        result = adapter.lookup(input_dict)
+    except ProviderLookupError as exc:
+        health.record_failure(db, kind, provider, str(exc))
+        raise
+    health.record_success(db, kind, provider)
     payload = {"provider": provider, **result}
 
     row = db.get(LookupCache, rid)

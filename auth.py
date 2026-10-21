@@ -19,6 +19,14 @@ AUTH_TOKEN_ENV = "SMIA_AUTH_TOKEN"
 def register_auth(app):
     @app.before_request
     def _require_bearer_token():
+        # /ui's static HTML/CSS/JS must load unauthenticated — that's where
+        # an operator pastes the token in the first place (D46's
+        # database-exploration UI, chicken-and-egg otherwise). The data
+        # those pages fetch (/providers, /health, and every lookup
+        # endpoint) still goes through this check normally.
+        if request.path == "/ui" or request.path.startswith("/ui/"):
+            return None
+
         token = os.environ.get(AUTH_TOKEN_ENV)
         if not token:
             return jsonify({"error": "server misconfigured: SMIA_AUTH_TOKEN not set"}), 500
