@@ -9,10 +9,13 @@ Run: `flask --app app run` (dev) with DATABASE_URL and SMIA_AUTH_TOKEN set.
 
 from __future__ import annotations
 
-from flask import Flask, jsonify
+from flask import Flask, Response, jsonify
 from flask_cors import CORS
 
+import audio_cache
+import cache
 from auth import register_auth
+from db.session import session_scope
 
 app = Flask(__name__)
 CORS(app)
@@ -38,6 +41,34 @@ def _extract_ipa_input(body: dict) -> dict:
 
 
 register_lookup_routes(app, "ipa", _extract_ipa_input)
+
+
+def _extract_tts_input(body: dict) -> dict:
+    if "text" not in body or "lang" not in body:
+        raise ValueError("text and lang are required")
+    return {"text": body["text"], "lang": body["lang"]}
+
+
+# /tts has its own GET: the tts-api spec's `GET /tts/{sha256}` (raw audio
+# bytes, keyed on the *audio's* content hash) shares a path shape with the
+# generic lookup-cache `GET /<kind>/{id}` (metadata, keyed on the
+# *request's* resource id) — register_get=False skips the generic GET so
+# this single handler can serve both: resource-id metadata if it matches a
+# cached /tts lookup, else raw bytes if it matches a cached audio clip.
+register_lookup_routes(app, "tts", _extract_tts_input, register_get=False)
+
+
+@app.route("/tts/<key>", methods=["GET"])
+def get_tts(key):
+    with session_scope() as db:
+        payload = cache.fetch_by_id(db, "tts", key)
+        if payload is not None:
+            return jsonify(payload), 200
+        audio = audio_cache.fetch(db, key)
+        if audio is not None:
+            data, content_type = audio
+            return Response(data, mimetype=content_type)
+    return jsonify({"error": "not found"}), 404
 
 
 @app.route("/health", methods=["GET"])

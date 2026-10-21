@@ -14,3 +14,5 @@ from . import kaikki_ipa  # noqa: F401
 from . import ordbokene  # noqa: F401
 from . import ipadict  # noqa: F401
 from . import wikipron  # noqa: F401
+from . import kaikki_tts  # noqa: F401
+from . import not_configured  # noqa: F401

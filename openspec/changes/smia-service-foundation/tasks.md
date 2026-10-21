@@ -35,13 +35,13 @@
 
 ## 5. `/tts`
 
-- [ ] 5.1 Implement smia's private content-addressed audio cache (distinct from stabbur's canonical blob store)
-- [ ] 5.2 Implement the Forvo adapter, returning one candidate per available recording
-- [ ] 5.3 Probe dict.cc's audio access (scrape or API) and implement it as a real-recording `/tts` provider
-- [ ] 5.4 Import the kaikki.org dump's `sounds[].mp3_url` field as a queryable/fetchable source
-- [ ] 5.5 Probe filmot.com's actual v1 API (endpoints, auth, response shape) and implement the adapter: search captions for the phrase, slice the matched clip
-- [ ] 5.6 Probe ElevenLabs' free-tier API and implement the synthesis adapter, surfacing voice metadata (e.g. `gender`) per candidate
-- [ ] 5.7 Wire `POST /tts` + `GET /tts/{sha256}` (raw bytes), returning `candidates[]` across all configured providers — no piper
+- [x] 5.1 Implement smia's private content-addressed audio cache (distinct from stabbur's canonical blob store)
+- [ ] 5.2 Implement the Forvo adapter, returning one candidate per available recording — **blocked: needs a Forvo API key (account signup)**; registered as a stub (`adapters/not_configured.py`) that errors clearly when called, per explicit user direction to skip and move on
+- [ ] 5.3 Probe dict.cc's audio access (scrape or API) and implement it as a real-recording `/tts` provider — **blocked: audio delivery sits behind an obfuscated anti-bot JS loader**, confirmed by probing `deno.dict.cc` live; stubbed, same as 5.2
+- [x] 5.4 Import the kaikki.org dump's `sounds[].mp3_url` field as a queryable/fetchable source
+- [ ] 5.5 Probe filmot.com's actual v1 API (endpoints, auth, response shape) and implement the adapter: search captions for the phrase, slice the matched clip — **blocked: `filmot.com/api/getstats` confirmed live that an `apikey` is required**, no anonymous tier found; stubbed, same as 5.2
+- [ ] 5.6 Probe ElevenLabs' free-tier API and implement the synthesis adapter, surfacing voice metadata (e.g. `gender`) per candidate — **blocked: needs an ElevenLabs API key (account signup)**; stubbed, same as 5.2
+- [x] 5.7 Wire `POST /tts` + `GET /tts/{sha256}` (raw bytes), returning `candidates[]` across all configured providers — no piper (kaikki + the four stubs; stubs error with a clear "not configured" message rather than silently returning nothing)
 
 ## 6. `/translations`
 

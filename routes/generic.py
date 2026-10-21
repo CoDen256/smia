@@ -18,7 +18,9 @@ from db.session import session_scope
 from registry import ProviderRequiredError, UnknownProviderError
 
 
-def register_lookup_routes(app, kind: str, extract_input, *, force_refresh_param: str = "forceRefresh"):
+def register_lookup_routes(
+    app, kind: str, extract_input, *, force_refresh_param: str = "forceRefresh", register_get: bool = True
+):
     """`extract_input(body: dict) -> dict` returns the normalized input dict
     (everything the cache hashes on, i.e. the request body minus `provider`
     and minus `force_refresh_param`). Raise ValueError for a malformed body
@@ -54,4 +56,5 @@ def register_lookup_routes(app, kind: str, extract_input, *, force_refresh_param
         return jsonify(payload), 200
 
     app.add_url_rule(f"/{kind}", endpoint=f"post_{kind}", view_func=_post, methods=["POST"])
-    app.add_url_rule(f"/{kind}/<rid>", endpoint=f"get_{kind}", view_func=_get, methods=["GET"])
+    if register_get:
+        app.add_url_rule(f"/{kind}/<rid>", endpoint=f"get_{kind}", view_func=_get, methods=["GET"])

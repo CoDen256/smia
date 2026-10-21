@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import datetime
 
-from sqlalchemy import DateTime, Integer, Text, UniqueConstraint, func
+from sqlalchemy import DateTime, Integer, LargeBinary, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -161,6 +161,23 @@ class IpaDictEntry(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     wordform: Mapped[str] = mapped_column(Text, nullable=False)
     ipa: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class TtsAudio(Base):
+    """smia's private, content-addressed audio cache (task 5.1) — distinct
+    from `LookupCache`'s metadata-only rows and from stabbur's canonical
+    blob store (tts-api spec: this cache is an optimization, not a store of
+    record). Keyed on `sha256(bytes)` so identical audio from different
+    providers/requests is stored once."""
+
+    __tablename__ = "tts_audio"
+
+    sha256: Mapped[str] = mapped_column(Text, primary_key=True)
+    content_type: Mapped[str] = mapped_column(Text, nullable=False)
+    data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
 
 class WikipronEntry(Base):

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 
-from db.models import Base, LookupCache
+from db.models import Base, LookupCache, TtsAudio
 from db.session import get_sessionmaker
 import registry as registry_module
 
@@ -15,6 +15,7 @@ def clean_db():
     Session = get_sessionmaker()
     with Session() as db:
         db.query(LookupCache).delete()
+        db.query(TtsAudio).delete()
         db.commit()
     yield
 
