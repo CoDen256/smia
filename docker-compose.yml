@@ -24,6 +24,13 @@ services:
       DATABASE_URL: postgresql+psycopg2://smia:smia@postgres:5432/smia
       SMIA_AUTH_TOKEN: ${SMIA_AUTH_TOKEN:-changeme}
       FLASK_DEBUG: "0"
+      # Provider credentials (D-T2): passed through with empty defaults, not
+      # required — a provider whose token is empty just fails at adapter-call
+      # time with its existing "needs a *_TOKEN" error; compose itself never
+      # refuses to start over a missing provider key. See .env.example.
+      HF_TOKEN: ${HF_TOKEN:-}
+      DEEPL_TOKEN: ${DEEPL_TOKEN:-}
+      ELEVENLABS_TOKEN: ${ELEVENLABS_TOKEN:-}
     volumes:
       # Bind mount, not baked into the image: providers/ is gitignored raw
       # data (hundreds of MB to ~1GB), not something to COPY into every

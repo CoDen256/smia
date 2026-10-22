@@ -22,4 +22,4 @@ from . import hf_whisper  # noqa: F401
 from . import dictcc_api  # noqa: F401
 from . import dictcc_static  # noqa: F401
 from . import elevenlabs  # noqa: F401
-from . import not_configured  # noqa: F401
+from . import manual_link  # noqa: F401

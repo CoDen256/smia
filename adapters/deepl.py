@@ -6,8 +6,13 @@ against `api-free.deepl.com` — the client handles free-vs-pro host
 selection and the auth-key header internally, so this adapter no longer
 needs to know the API's base URL at all.
 
-Still errors clearly (not silently) until a `DEEPL_API_KEY` is configured,
+Still errors clearly (not silently) until a `DEEPL_TOKEN` is configured,
 same spirit as `auth.py`'s own "server misconfigured" check.
+
+`DEEPL_TOKEN`, not `DEEPL_API_KEY` (renamed by `provider-tokens-and-
+manual-link-fallback`, D-T1): every provider credential env var ends in
+`_TOKEN` (`HF_TOKEN`, `ELEVENLABS_TOKEN`) — this was the one adapter out
+of step with that, and with the name the user already uses in `.env`.
 """
 
 from __future__ import annotations
@@ -28,9 +33,9 @@ _TARGET_LANG_OVERRIDES = {"EN": "EN-US", "PT": "PT-PT"}
 
 class DeeplAdapter:
     def lookup(self, input_dict: dict) -> dict:
-        api_key = os.environ.get("DEEPL_API_KEY")
+        api_key = os.environ.get("DEEPL_TOKEN")
         if not api_key:
-            raise ProviderLookupError("deepl is not configured yet: needs a DEEPL_API_KEY")
+            raise ProviderLookupError("deepl is not configured yet: needs a DEEPL_TOKEN")
 
         target_lang = input_dict["to"].upper()
         target_lang = _TARGET_LANG_OVERRIDES.get(target_lang, target_lang)

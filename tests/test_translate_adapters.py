@@ -67,13 +67,13 @@ def test_bing_translate_surfaces_client_error():
 
 
 def test_deepl_without_key_errors_clearly(monkeypatch):
-    monkeypatch.delenv("DEEPL_API_KEY", raising=False)
-    with pytest.raises(ProviderLookupError, match="DEEPL_API_KEY"):
+    monkeypatch.delenv("DEEPL_TOKEN", raising=False)
+    with pytest.raises(ProviderLookupError, match="DEEPL_TOKEN"):
         DeeplAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
 
 
 def test_deepl_with_key_parses_translation(monkeypatch):
-    monkeypatch.setenv("DEEPL_API_KEY", "fake-key")
+    monkeypatch.setenv("DEEPL_TOKEN", "fake-key")
     mock_translator = MagicMock()
     mock_translator.translate_text.return_value = MagicMock(text="house")
     with patch("adapters.deepl.deepl.Translator", return_value=mock_translator):
@@ -89,7 +89,7 @@ def test_deepl_with_key_parses_translation(monkeypatch):
 def test_deepl_surfaces_client_exception(monkeypatch):
     import deepl as deepl_pkg
 
-    monkeypatch.setenv("DEEPL_API_KEY", "fake-key")
+    monkeypatch.setenv("DEEPL_TOKEN", "fake-key")
     mock_translator = MagicMock()
     mock_translator.translate_text.side_effect = deepl_pkg.AuthorizationException("bad key")
     with patch("adapters.deepl.deepl.Translator", return_value=mock_translator):
