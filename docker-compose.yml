@@ -6,9 +6,33 @@ services:
       POSTGRES_PASSWORD: smia
       POSTGRES_DB: smia
     ports:
-      - "5433:5432"
+      - "5433:5432"   # published for local dev (native venv connecting in); drop for a locked-down deploy
     volumes:
       - smia-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smia"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://smia:smia@postgres:5432/smia
+      SMIA_AUTH_TOKEN: ${SMIA_AUTH_TOKEN:-changeme}
+      FLASK_DEBUG: "0"
+    volumes:
+      # Bind mount, not baked into the image: providers/ is gitignored raw
+      # data (hundreds of MB to ~1GB), not something to COPY into every
+      # built image layer. bootstrap.py imports from here once, idempotently
+      # (skipped on restart once the named Postgres volume is populated),
+      # and warns-but-doesn't-fail if a given file isn't present.
+      - ./providers:/app/providers:ro
+    ports:
+      - "5055:5055"
 
 volumes:
   smia-pg-data:

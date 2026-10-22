@@ -161,4 +161,7 @@ def providers():
 
 
 if __name__ == "__main__":
-    app.run(port=5055, debug=True)
+    import os as _os
+
+    debug = _os.environ.get("FLASK_DEBUG", "1") == "1"
+    app.run(host="0.0.0.0", port=5055, debug=debug)
