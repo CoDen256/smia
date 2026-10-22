@@ -139,21 +139,37 @@ def _parse_inflection_blocks(inflections_info: str, inflections_repl: str) -> li
     # table came back with every value one slot off (e.g. the indefinite
     # singular's value landing under "definite.sg").
     segments = [s.strip() for s in html.unescape(inflections_repl).split(";")]
+    while segments and not segments[-1]:
+        segments.pop()  # trailing empty segment after the format's final ";"
+
+    blocks = list(_POS_BLOCK_RE.finditer(inflections_info))
     seg_idx = 0
     candidates = []
 
-    for m in _POS_BLOCK_RE.finditer(inflections_info):
+    for block_num, m in enumerate(blocks):
         pos_tag, label_line = m.group(1), m.group(2)
         labels = [_normalize_label(l) for l in label_line.split("|")]
         n = len(labels)
-        block_segments = segments[seg_idx:seg_idx + n]
-        seg_idx += n
 
         if pos_tag not in _ENTRY_POS:
             break  # unrecognized/complex shape (e.g. ADJ) — stop, best-effort
 
+        # The raw HTML (`inflections`, not `inflections_repl`) shows a cell
+        # can itself hold multiple alternates joined by "/" — e.g. "hus"'s
+        # definite-plural cell is literally "husa / husene" one cell, one
+        # label. `inflections_repl` flattens that into an extra ";"-
+        # delimited segment with no label of its own, which a strict
+        # 1-segment-per-label read silently dropped (confirmed live,
+        # comparing the two fields side by side). Only the LAST block can
+        # safely claim its leftover segments — if another recognized block
+        # follows, exactly `n` segments are consumed to not misalign it.
+        is_last_block = block_num == len(blocks) - 1
+        block_segments = segments[seg_idx:] if is_last_block else segments[seg_idx:seg_idx + n]
+        seg_idx += len(block_segments)
+        extra_segments, block_segments = block_segments[n:], block_segments[:n]
+
         label_map = _NOUN_LABELS if pos_tag == "NOUN" else _VERB_LABELS
-        paradigm = {}
+        values_by_key: dict[str, list[str]] = {}
         article = None
         for label, seg in zip(labels, block_segments):
             key = label_map.get(label)
@@ -165,12 +181,22 @@ def _parse_inflection_blocks(inflections_info: str, inflections_repl: str) -> li
             display, clean = parts[0].strip(), parts[1].strip()
             if not clean or clean == "-":
                 continue
-            paradigm[key] = clean
+            values_by_key[key] = [clean]
             if key == "sg_indef" and article is None:
                 tokens = display.split()
                 if len(tokens) > 1:
                     article = tokens[0]
 
+        last_key = label_map.get(labels[-1]) if labels else None
+        for seg in extra_segments:
+            parts = seg.split("\t")
+            if len(parts) < 2 or last_key is None:
+                continue
+            clean = parts[1].strip()
+            if clean and clean != "-":
+                values_by_key.setdefault(last_key, []).append(clean)
+
+        paradigm = {key: " / ".join(values) for key, values in values_by_key.items()}
         if pos_tag == "NOUN" and article:
             paradigm = {"article": article, **paradigm}
         candidates.append({"pos": _ENTRY_POS[pos_tag], "paradigm": paradigm})

@@ -26,25 +26,35 @@ from registry import registry
 _ARTICLE_FOR_GENDER = {"m": "en", "f": "ei", "n": "et"}
 
 
-def _first_form(forms: list[dict], *, has_all: set[str] = frozenset(), has_none: set[str] = frozenset()):
+def _matching_forms(forms: list[dict], *, has_all: set[str] = frozenset(), has_none: set[str] = frozenset()) -> str | None:
+    """Joins every form matching the given tags with " / " — kaikki can
+    legitimately list more than one surface form under the same tag set
+    (e.g. "hus"'s definite plural has both "husa" and "husene", two forms
+    both tagged definite+plural). Taking only the first silently dropped
+    the second until this was reported; " / " matches dict.cc's own
+    convention for the same kind of same-slot alternate (see
+    adapters/dictcc_api.py)."""
+    values = []
     for f in forms:
         tags = set(f.get("tags", []))
         if has_all <= tags and not (has_none & tags):
-            return f.get("form")
-    return None
+            value = f.get("form")
+            if value and value not in values:
+                values.append(value)
+    return " / ".join(values) if values else None
 
 
 def _build_noun(word: str, gender: str | None, forms: list[dict]) -> dict:
     paradigm = {"article": _ARTICLE_FOR_GENDER.get(gender, "en")}
-    sg_indef = _first_form(forms, has_all={"indefinite", "singular"}) or word
+    sg_indef = _matching_forms(forms, has_all={"indefinite", "singular"}) or word
     paradigm["sg_indef"] = sg_indef
-    sg_def = _first_form(forms, has_all={"definite", "singular"}, has_none={"plural"})
+    sg_def = _matching_forms(forms, has_all={"definite", "singular"}, has_none={"plural"})
     if sg_def:
         paradigm["sg_def"] = sg_def
-    pl_indef = _first_form(forms, has_all={"indefinite", "plural"})
+    pl_indef = _matching_forms(forms, has_all={"indefinite", "plural"})
     if pl_indef:
         paradigm["pl_indef"] = pl_indef
-    pl_def = _first_form(forms, has_all={"definite", "plural"})
+    pl_def = _matching_forms(forms, has_all={"definite", "plural"})
     if pl_def:
         paradigm["pl_def"] = pl_def
     return paradigm
@@ -52,13 +62,13 @@ def _build_noun(word: str, gender: str | None, forms: list[dict]) -> dict:
 
 def _build_verb(word: str, forms: list[dict]) -> dict:
     paradigm = {"infinitiv": word}
-    presens = _first_form(forms, has_all={"present"})
+    presens = _matching_forms(forms, has_all={"present"})
     if presens:
         paradigm["presens"] = presens
-    preteritum = _first_form(forms, has_all={"past"}, has_none={"participle"})
+    preteritum = _matching_forms(forms, has_all={"past"}, has_none={"participle"})
     if preteritum:
         paradigm["preteritum"] = preteritum
-    perfektum = _first_form(forms, has_all={"participle", "past"})
+    perfektum = _matching_forms(forms, has_all={"participle", "past"})
     if perfektum:
         paradigm["perfektum"] = perfektum
     return paradigm
@@ -66,16 +76,16 @@ def _build_verb(word: str, forms: list[dict]) -> dict:
 
 def _build_adjektiv(word: str, forms: list[dict]) -> dict:
     paradigm = {"positiv": word}
-    noeytrum = _first_form(forms, has_all={"neuter"})
+    noeytrum = _matching_forms(forms, has_all={"neuter"})
     if noeytrum:
         paradigm["nøytrum"] = noeytrum
-    flertall = _first_form(forms, has_all={"definite"})
+    flertall = _matching_forms(forms, has_all={"definite"})
     if flertall:
         paradigm["flertall"] = flertall
-    komparativ = _first_form(forms, has_all={"comparative"})
+    komparativ = _matching_forms(forms, has_all={"comparative"})
     if komparativ:
         paradigm["komparativ"] = komparativ
-    superlativ = _first_form(forms, has_all={"superlative"})
+    superlativ = _matching_forms(forms, has_all={"superlative"})
     if superlativ:
         paradigm["superlativ"] = superlativ
     return paradigm
@@ -83,10 +93,10 @@ def _build_adjektiv(word: str, forms: list[dict]) -> dict:
 
 def _build_adverb(word: str, forms: list[dict]) -> dict:
     paradigm = {"form": word}
-    komparativ = _first_form(forms, has_all={"comparative"})
+    komparativ = _matching_forms(forms, has_all={"comparative"})
     if komparativ:
         paradigm["komparativ"] = komparativ
-    superlativ = _first_form(forms, has_all={"superlative"})
+    superlativ = _matching_forms(forms, has_all={"superlative"})
     if superlativ:
         paradigm["superlativ"] = superlativ
     return paradigm

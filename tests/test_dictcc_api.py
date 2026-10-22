@@ -55,6 +55,26 @@ _NO_TABLE_RESPONSE = {
     "translations": [], "dir": 1, "inflections": "", "inflections_repl": "", "inflections_info": "",
 }
 
+# Captured live: "hus"'s definite-plural cell has two alternates ("husa",
+# "husene") — the raw `inflections` HTML shows them as one cell joined by
+# "/", but `inflections_repl` flattens that into an extra ";"-delimited
+# segment with no label of its own.
+_HUS_RESPONSE = {
+    "translations": [{"id": 1, "term1": "hus", "term2": "house {n}", "entry_type": "noun",
+                       "subj_ids": "", "vt_usage": 0, "sort_num": 16}],
+    "dir": 2,
+    "inflections": (
+        '<tr title="article indefinite.sg | definite.sg | indefinite.pl | definite.pl">'
+        '<td valign="top"></td><td valign="top"><b>NOUN</b>&nbsp;&nbsp;</td>'
+        '<td width="95%" > et&nbsp;hus <span class="infl_pipe">|</span> huset '
+        '<span class="infl_pipe">|</span> hus <span class="infl_pipe">|</span> husa / husene </td></tr>'
+    ),
+    "inflections_repl": (
+        " et&nbsp;hus \thus\t;\t huset \thuset\t;\t hus \thus\t;\t husa \thusa\t;\t husene \thusene\t;\t"
+    ),
+    "inflections_info": "<br><b>NOUN</b> &nbsp; article indefinite.sg | definite.sg | indefinite.pl | definite.pl",
+}
+
 
 def _mock_response(json_data):
     resp = MagicMock()
@@ -107,6 +127,16 @@ def test_inflect_multiple_pos_blocks_are_separate_candidates():
     assert verb["paradigm"] == {"infinitiv": "gehen", "preteritum": "ging", "perfektum": "gegangen"}
     noun = next(c for c in result["candidates"] if c["pos"] == "substantiv")
     assert noun["paradigm"] == {"article": "das", "sg_indef": "Gehen"}  # "-" plural dropped, not "-"
+
+
+def test_inflect_cell_with_slash_alternates_keeps_both():
+    # Regression: inflections_repl flattens "husa / husene" (one cell) into
+    # an extra untagged segment beyond the label count — a strict
+    # 1-segment-per-label read silently dropped "husene".
+    with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_HUS_RESPONSE)):
+        result = DictccApiInflectAdapter().lookup({"word": "hus", "lang": "nb"})
+    candidate = result["candidates"][0]
+    assert candidate["paradigm"]["pl_def"] == "husa / husene"
 
 
 def test_inflect_no_table_returns_empty_candidates():

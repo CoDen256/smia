@@ -33,3 +33,12 @@ def test_verb_excludes_imperative_and_passive_forms(adapter):
 def test_unknown_word_is_empty_not_error(adapter):
     result = adapter.lookup({"word": "qzxnotaword999", "lang": "nb"})
     assert result == {"candidates": []}
+
+
+def test_multiple_forms_sharing_one_tag_set_are_all_kept(adapter):
+    # kaikki's "hus" lists both "husa" and "husene" tagged definite+plural —
+    # taking only the first silently dropped the second until this was
+    # reported; both must survive, joined, not just whichever came first.
+    result = adapter.lookup({"word": "hus", "lang": "nb"})
+    noun = next(c for c in result["candidates"] if c["pos"] == "substantiv")
+    assert noun["paradigm"]["pl_def"] == "husa / husene"
