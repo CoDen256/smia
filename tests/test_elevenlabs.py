@@ -76,11 +76,34 @@ def test_tts_falls_back_to_any_voice_when_none_match_language(monkeypatch):
     assert result["candidates"][0]["voice"] == "Adam"
 
 
-def test_tts_no_voices_available_is_a_clear_error(monkeypatch):
+def test_tts_falls_back_to_premade_voice_when_account_has_none(monkeypatch):
     monkeypatch.setenv("ELEVENLABS_TOKEN", "fake-token")
     client = _mock_client(voices=[])
     with patch("adapters.elevenlabs.ElevenLabs", return_value=client):
-        with pytest.raises(ProviderLookupError, match="no voices available"):
+        result = ElevenLabsTtsAdapter().lookup({"text": "hus", "lang": "nb"})
+    assert result["candidates"][0]["voice"] == "Rachel"
+
+
+def test_tts_falls_back_to_premade_voice_when_listing_not_permitted(monkeypatch):
+    # Live-confirmed real behavior: a scoped API key can be authorized to
+    # synthesize but not to list voices (401, missing_permissions:
+    # voices_read) — this must fall back, not fail the whole request.
+    monkeypatch.setenv("ELEVENLABS_TOKEN", "fake-token")
+    client = _mock_client(tts_chunks=[b"fake-mp3-bytes"])
+    client.voices.search.side_effect = _api_error(401, "missing_permissions: voices_read")
+    with patch("adapters.elevenlabs.ElevenLabs", return_value=client):
+        result = ElevenLabsTtsAdapter().lookup({"text": "hus", "lang": "nb"})
+    assert result["candidates"][0]["voice"] == "Rachel"
+
+
+def test_tts_surfaces_genuine_voice_listing_errors(monkeypatch):
+    # A non-permission failure while listing voices (e.g. a real outage)
+    # must NOT be silently swallowed by the permission fallback.
+    monkeypatch.setenv("ELEVENLABS_TOKEN", "fake-token")
+    client = _mock_client()
+    client.voices.search.side_effect = _api_error(500, "server error")
+    with patch("adapters.elevenlabs.ElevenLabs", return_value=client):
+        with pytest.raises(ProviderLookupError, match="request failed \\(500\\)"):
             ElevenLabsTtsAdapter().lookup({"text": "hus", "lang": "nb"})
 
 
@@ -114,7 +137,18 @@ def test_bad_credential_is_mapped_clearly(monkeypatch):
     client = _mock_client(voices=[_mock_voice()])
     client.text_to_speech.convert.side_effect = _api_error(401, "invalid key")
     with patch("adapters.elevenlabs.ElevenLabs", return_value=client):
-        with pytest.raises(ProviderLookupError, match="credential rejected \\(401\\)"):
+        with pytest.raises(ProviderLookupError, match="authorization error \\(401"):
+            ElevenLabsTtsAdapter().lookup({"text": "hus", "lang": "nb"})
+
+
+def test_payment_required_is_mapped_clearly(monkeypatch):
+    # Live-confirmed real behavior: free-tier accounts get this when
+    # synthesizing with a shared/library voice via the API.
+    monkeypatch.setenv("ELEVENLABS_TOKEN", "fake-token")
+    client = _mock_client(voices=[_mock_voice()])
+    client.text_to_speech.convert.side_effect = _api_error(402, "paid_plan_required")
+    with patch("adapters.elevenlabs.ElevenLabs", return_value=client):
+        with pytest.raises(ProviderLookupError, match="requires a paid plan"):
             ElevenLabsTtsAdapter().lookup({"text": "hus", "lang": "nb"})
 
 
