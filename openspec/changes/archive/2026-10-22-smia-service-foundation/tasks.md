@@ -37,7 +37,7 @@
 
 - [x] 5.1 Implement smia's private content-addressed audio cache (distinct from stabbur's canonical blob store)
 - [ ] 5.2 Implement the Forvo adapter, returning one candidate per available recording — **blocked: needs a Forvo API key (account signup)**; registered as a stub (`adapters/not_configured.py`) that errors clearly when called, per explicit user direction to skip and move on
-- [ ] 5.3 Probe dict.cc's audio access (scrape or API) and implement it as a real-recording `/tts` provider — **blocked: audio delivery sits behind an obfuscated anti-bot JS loader**, confirmed by probing `deno.dict.cc` live; stubbed, same as 5.2
+- [x] 5.3 Probe dict.cc's audio access (scrape or API) and implement it as a real-recording `/tts` provider — **un-stubbed by `add-dictcc-providers` (2026-10-22)**: the public web scrape stayed blocked (anti-bot JS), but dict.cc's mobile-app backend (`speak.audio.v2.php`) is a working, unauthenticated access path. See `adapters/dictcc_api.py`
 - [x] 5.4 Import the kaikki.org dump's `sounds[].mp3_url` field as a queryable/fetchable source
 - [ ] 5.5 Probe filmot.com's actual v1 API (endpoints, auth, response shape) and implement the adapter: search captions for the phrase, slice the matched clip — **blocked: `filmot.com/api/getstats` confirmed live that an `apikey` is required**, no anonymous tier found; stubbed, same as 5.2
 - [ ] 5.6 Probe ElevenLabs' free-tier API and implement the synthesis adapter, surfacing voice metadata (e.g. `gender`) per candidate — **blocked: needs an ElevenLabs API key (account signup)**; stubbed, same as 5.2
@@ -49,7 +49,7 @@
 - [x] 6.2 Port `bing.ts` scrape logic into a Python adapter — live-tested call found `edge.microsoft.com/translate/auth` now 404s (endpoint likely moved/retired since `bing.ts` was last verified); ported faithfully and verified against mocked fixtures matching `bing/types.ts`
 - [x] 6.3 Implement the DeepL free-tier API adapter — fully implemented against DeepL's public documented API; errors clearly pending a `DEEPL_API_KEY` this environment doesn't have
 - [x] 6.4 Implement the LibreTranslate API adapter — configurable instance URL; libretranslate.com now requires its own API key and the public mirrors probed were all down, a known instability of community-run instances
-- [ ] 6.5 Probe dict.cc's translation data (scrape) and implement it as a `/translations` provider, surfacing meaning-specific entries as `context` — **blocked: same obfuscated anti-bot JS loader found probing dict.cc for 5.3**; stubbed via `adapters/not_configured.py`, per direction given for the /tts section
+- [x] 6.5 Probe dict.cc's translation data (scrape) and implement it as a `/translations` provider, surfacing meaning-specific entries as `context` — **un-stubbed by `add-dictcc-providers` (2026-10-22)**: same mobile-app backend as 5.3 (`app_translations.php`), plus a second `dictcc_static` provider backed by a local import of dict.cc's own vocabulary dumps. See `adapters/dictcc_api.py`/`adapters/dictcc_static.py`
 - [x] 6.6 Wire `POST /translations` + `GET /translations/{id}` — response is `{provider, text, context?}` only, no `lang`/`transliteration`/`transcription`
 
 ## 7. `/stt`

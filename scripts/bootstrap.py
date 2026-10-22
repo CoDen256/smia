@@ -11,6 +11,7 @@ no candidates, same as any other "unknown word" response.
 
 from __future__ import annotations
 
+import glob
 import os
 import subprocess
 import sys
@@ -18,7 +19,37 @@ import sys
 from sqlalchemy import text
 
 from db.session import get_engine
-from scripts import import_ipadict, import_kaikki, import_nst, import_ordbank, import_wikipron
+from scripts import (
+    import_dictcc_static,
+    import_ipadict,
+    import_kaikki,
+    import_nst,
+    import_ordbank,
+    import_wikipron,
+)
+
+# dict.cc's dump filenames are download tokens, not stable names (e.g.
+# "cnsfdgcgdd-8413511861-79ieio.txt") — identify NO-EN/NO-DE/DE-EN by each
+# file's own header line instead of assuming a filename.
+_DICTCC_PAIR_HEADERS = {
+    "# NO-EN vocabulary database": "no_en",
+    "# NO-DE vocabulary database": "no_de",
+    "# DE-EN vocabulary database": "de_en",
+}
+
+
+def _find_dictcc_static_args() -> list[str]:
+    args = []
+    for path in sorted(glob.glob("providers/dict/*.txt")):
+        with open(path, encoding="utf-8") as f:
+            header = f.readline().strip()
+        pair = _DICTCC_PAIR_HEADERS.get(header)
+        if pair:
+            args += [path, pair]
+    if not args:
+        raise FileNotFoundError("no providers/dict/*.txt files with a recognized NO-EN/NO-DE/DE-EN header")
+    return args
+
 
 _IMPORTS = [
     ("ordbank_fullform", import_ordbank.run, ["providers/nbno/20220201_norsk_ordbank_nob_2005.tar.gz"]),
@@ -30,6 +61,7 @@ _IMPORTS = [
     ),
     ("ipa_dict_entry", import_ipadict.run, ["providers/open-dict/nb.txt"]),
     ("wikipron_entry", import_wikipron.run, ["providers/wikipron/data/scrape/tsv/nob_latn_broad.tsv"]),
+    ("dictcc_static_entry", import_dictcc_static.run, _find_dictcc_static_args),
 ]
 
 
@@ -47,7 +79,8 @@ def main() -> None:
             print(f"[bootstrap] {table} already populated, skipping import", file=sys.stderr)
             continue
         try:
-            run(*args)
+            resolved_args = args() if callable(args) else args
+            run(*resolved_args)
         except FileNotFoundError as exc:
             print(f"[bootstrap] skipping {run.__module__}: {exc}", file=sys.stderr)
 

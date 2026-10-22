@@ -209,3 +209,32 @@ class WikipronEntry(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     wordform: Mapped[str] = mapped_column(Text, nullable=False)
     ipa: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class DictccStaticEntry(Base):
+    """The `dictcc_static` /translations provider's local import of dict.cc's
+    NO-EN/NO-DE/DE-EN vocabulary dumps (task 2.1). `pair` is one of
+    `no_en`/`no_de`/`de_en`; `term1`/`term2` follow the dump's own column
+    order (e.g. for `no_en`, term1 is Norwegian, term2 is English) — the
+    adapter picks which column is the query side per the `(from, to)` it
+    was asked for. Private-use-licensed data (D-DC4): never exposed raw or
+    in bulk by any route, only single-row lemma-pair lookups.
+
+    `term1_clean`/`term2_clean` strip trailing grammar annotations
+    (`"Haus {n}"` -> `"Haus"`) that the raw dump bakes directly into the
+    term text — discovered live: a query for the bare lemma "Haus" matched
+    nothing because every stored row is `"Haus {n}"`, never the bare word.
+    Lookups match against the `_clean` columns; the *answer* returned is
+    still the raw (annotated) `term1`/`term2` value, same as dict.cc's own
+    live API responses."""
+
+    __tablename__ = "dictcc_static_entry"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    pair: Mapped[str] = mapped_column(Text, nullable=False)
+    term1: Mapped[str] = mapped_column(Text, nullable=False)
+    term2: Mapped[str] = mapped_column(Text, nullable=False)
+    term1_clean: Mapped[str] = mapped_column(Text, nullable=False)
+    term2_clean: Mapped[str] = mapped_column(Text, nullable=False)
+    pos: Mapped[str] = mapped_column(Text, nullable=False)
+    tags: Mapped[str] = mapped_column(Text, nullable=False)
