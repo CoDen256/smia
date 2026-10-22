@@ -5,8 +5,14 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# nodejs: the `translators` package's Bing engine (adapters/bing_translate.py,
+# provider-client-libraries D-L4) shells out to a JS runtime for Bing's
+# client-side signing logic — confirmed missing live ("Unable to find
+# available javascript runtime") the first time this ran inside the
+# container, which doesn't happen in a dev venv that already has Node.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

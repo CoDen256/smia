@@ -1,15 +1,21 @@
 """
 adapters/hf_whisper.py — the `hf_whisper` /stt provider, ported from
 phonexa's `shadow.js` `transcribeViaHuggingFace` (task 7.1): Hugging Face
-Inference's router, cloud-only per D17 (no local faster-whisper fallback —
+Inference, cloud-only per D17 (no local faster-whisper fallback —
 `shadow.js`'s local-backend option is explicitly dropped, per the
 proposal's Impact section).
 
+Uses `huggingface_hub`'s `InferenceClient` (D-L1, `provider-client-
+libraries`) rather than hand-rolled `requests` calls against
+`router.huggingface.co` — HF's own maintained client, which already
+handles the base64/raw-bytes request-shape branching `shadow.js`'s
+original code hand-rolled: `extra_body={"generate_kwargs": {...}}` is the
+client's documented passthrough for provider-specific Inference
+parameters, confirmed against a live call to produce the same
+`language`/`task` behavior as the original JSON body.
+
 Input is raw audio bytes (not JSON) — see `app.py`'s `/stt` route for how
 that's reconciled with the lookup-cache's JSON-input-hashing contract.
-`language`, when given, switches HF's request shape from raw-bytes body to
-a JSON body with base64-encoded audio (mirrors `shadow.js` exactly: HF's
-generate_kwargs.language option isn't available on the plain-bytes path).
 """
 
 from __future__ import annotations
@@ -17,7 +23,8 @@ from __future__ import annotations
 import base64
 import os
 
-import requests
+from huggingface_hub import InferenceClient
+from huggingface_hub.errors import HfHubHTTPError
 
 from cache import ProviderLookupError
 from registry import registry
@@ -34,36 +41,25 @@ class HfWhisperAdapter:
         audio = base64.b64decode(input_dict["audio_b64"])
         language = input_dict.get("lang")
         model = os.environ.get("HF_WHISPER_MODEL", _DEFAULT_MODEL)
-        url = f"https://router.huggingface.co/hf-inference/models/{model}"
-        headers = {"Authorization": f"Bearer {token}"}
 
+        extra_body = None
         if language:
-            headers["Content-Type"] = "application/json"
-            body = {
-                "inputs": base64.b64encode(audio).decode("ascii"),
-                "parameters": {"generate_kwargs": {"language": language, "task": "transcribe"}},
-            }
-            kwargs = {"json": body}
-        else:
-            headers["Content-Type"] = "audio/wav"
-            kwargs = {"data": audio}
+            extra_body = {"generate_kwargs": {"language": language, "task": "transcribe"}}
 
+        client = InferenceClient(token=token)
         try:
-            resp = requests.post(url, headers=headers, timeout=60, **kwargs)
-            data = resp.json() if resp.content else None
-        except (requests.RequestException, ValueError) as exc:
+            output = client.automatic_speech_recognition(audio, model=model, extra_body=extra_body)
+        except HfHubHTTPError as exc:
+            message = exc.server_message or str(exc)
+            if "loading" in message.lower():
+                raise ProviderLookupError(
+                    f"model is loading on Hugging Face's servers — try again shortly ({message})"
+                ) from exc
+            raise ProviderLookupError(f"hf_whisper request failed: {message}") from exc
+        except Exception as exc:  # the client's own exceptions (timeouts, etc.)
             raise ProviderLookupError(f"hf_whisper request failed: {exc}") from exc
 
-        if not resp.ok:
-            error = (data or {}).get("error")
-            if error and "loading" in error.lower():
-                eta = (data or {}).get("estimated_time", 20)
-                raise ProviderLookupError(
-                    f"model is loading on Hugging Face's servers (~{eta:.0f}s) — try again shortly"
-                )
-            raise ProviderLookupError(error or f"HTTP {resp.status_code}")
-
-        return {"text": (data or {}).get("text", "")}
+        return {"text": output.text or ""}
 
 
 registry.register("stt", "hf_whisper", HfWhisperAdapter())

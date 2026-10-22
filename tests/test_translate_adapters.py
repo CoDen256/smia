@@ -1,9 +1,12 @@
-"""Tests for the /translations adapters (tasks 6.1-6.4), mocking HTTP
-since live calls to these endpoints are currently unreliable from this
-environment (Google IP-blocked, Bing's auth endpoint returning 404,
-LibreTranslate's free public instances all down/key-gated — see each
-adapter module's docstring). Mocked responses mirror hover-translate's
-real captured shapes (google/types.ts, bing/types.ts)."""
+"""Tests for the /translations adapters (tasks 6.1-6.4; updated by
+`provider-client-libraries` for the DeepL/Bing client-library swap and the
+libretranslate removal). Google still mocks raw HTTP (deliberately kept on
+it, see google_translate.py's docstring); DeepL mocks the `deepl` package's
+`Translator`; Bing mocks the `translators` package's `translate_text`.
+Google/Bing's live calls were unreliable from this environment when first
+implemented (Google IP-blocked, Bing's old hand-rolled auth endpoint
+404ing) — see each adapter module's docstring. Mocked responses mirror
+hover-translate's real captured shapes (google/types.ts) where applicable."""
 
 from __future__ import annotations
 
@@ -14,7 +17,6 @@ import pytest
 from adapters.bing_translate import BingTranslateAdapter
 from adapters.deepl import DeeplAdapter
 from adapters.google_translate import GoogleTranslateAdapter
-from adapters.libretranslate import LibreTranslateAdapter
 from cache import ProviderLookupError
 
 
@@ -49,11 +51,19 @@ def test_google_translate_omits_context_when_absent():
 
 
 def test_bing_translate_parses_translation():
-    fixture = [{"translations": [{"to": "en", "text": "house"}]}]
-    with patch("adapters.bing_translate.requests.get", return_value=_mock_response(text_data="fake.jwt.token")), \
-         patch("adapters.bing_translate.requests.post", return_value=_mock_response(json_data=fixture)):
+    with patch("adapters.bing_translate.translators.translate_text", return_value="house") as mock_translate:
         result = BingTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
     assert result == {"text": "house"}
+    _, kwargs = mock_translate.call_args
+    assert kwargs["translator"] == "bing"
+    assert kwargs["from_language"] == "nb"
+    assert kwargs["to_language"] == "en"
+
+
+def test_bing_translate_surfaces_client_error():
+    with patch("adapters.bing_translate.translators.translate_text", side_effect=RuntimeError("boom")):
+        with pytest.raises(ProviderLookupError, match="boom"):
+            BingTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
 
 
 def test_deepl_without_key_errors_clearly(monkeypatch):
@@ -64,21 +74,24 @@ def test_deepl_without_key_errors_clearly(monkeypatch):
 
 def test_deepl_with_key_parses_translation(monkeypatch):
     monkeypatch.setenv("DEEPL_API_KEY", "fake-key")
-    fixture = {"translations": [{"detected_source_language": "NB", "text": "house"}]}
-    with patch("adapters.deepl.requests.post", return_value=_mock_response(json_data=fixture)):
+    mock_translator = MagicMock()
+    mock_translator.translate_text.return_value = MagicMock(text="house")
+    with patch("adapters.deepl.deepl.Translator", return_value=mock_translator):
         result = DeeplAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
     assert result == {"text": "house"}
+    _, kwargs = mock_translator.translate_text.call_args
+    # bare "EN" is deprecated as a DeepL target_lang (confirmed live) —
+    # the adapter must disambiguate it, not pass it through as-is.
+    assert kwargs["target_lang"] == "EN-US"
+    assert kwargs["source_lang"] == "NB"
 
 
-def test_libretranslate_parses_translation():
-    fixture = {"translatedText": "house"}
-    with patch("adapters.libretranslate.requests.post", return_value=_mock_response(json_data=fixture)):
-        result = LibreTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
-    assert result == {"text": "house"}
+def test_deepl_surfaces_client_exception(monkeypatch):
+    import deepl as deepl_pkg
 
-
-def test_libretranslate_surfaces_server_error():
-    fixture = {"error": "no key"}
-    with patch("adapters.libretranslate.requests.post", return_value=_mock_response(json_data=fixture)):
-        with pytest.raises(ProviderLookupError, match="no key"):
-            LibreTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
+    monkeypatch.setenv("DEEPL_API_KEY", "fake-key")
+    mock_translator = MagicMock()
+    mock_translator.translate_text.side_effect = deepl_pkg.AuthorizationException("bad key")
+    with patch("adapters.deepl.deepl.Translator", return_value=mock_translator):
+        with pytest.raises(ProviderLookupError, match="bad key"):
+            DeeplAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})

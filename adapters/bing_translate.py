@@ -1,58 +1,57 @@
 """
-adapters/bing_translate.py — the `bing` /translations provider, ported from
-hover-translate's `bing/bing.ts` (task 6.2): the same public edge-auth
-token exchange + Microsoft Cognitive Services translate call, no API key.
+adapters/bing_translate.py — the `bing` /translations provider.
 
-Unlike `bing.ts` (which caches the JWT and only refreshes it near
-expiry), this adapter fetches a fresh token every call — simpler, and the
-two extra round trips are cheap relative to the lookup-cache's own
-per-request cost; no `jwt-decode`-equivalent dependency needed as a result.
+Originally ported from hover-translate's `bing.ts` (a hand-rolled public
+edge-auth-token exchange + Microsoft Cognitive Services call). Swapped to
+the `translators` package's Bing engine (D-L4, `provider-client-
+libraries`): unlike Google (see `google_translate.py`), this adapter never
+extracted any structured sense/dictionary data from Bing — only one plain
+translated string — so there was no data fidelity to lose by swapping, and
+it fixes a live-confirmed reliability problem: the old hand-rolled flow
+depended on `edge.microsoft.com/translate/auth`, an undocumented endpoint
+that returned 404 when this adapter was first tested (Microsoft appears to
+have moved or retired it). `translators` is actively maintained and
+handles Bing's access path as someone else's maintenance burden instead of
+this repo's hand-rolled auth exchange.
 
-Live-tested against this environment: `edge.microsoft.com/translate/auth`
-returned 404 — Microsoft appears to have moved or retired this exact
-undocumented endpoint since `bing.ts` was last verified working. The
-request/response shapes below match `bing/types.ts` exactly and are
-covered by tests/test_translate_adapters.py's mocked fixtures; if the auth
-endpoint has genuinely moved, that's a ported-code staleness issue to
-revisit, not a logic bug introduced here.
+`translators` is GPL-3.0 — accepted as a non-issue for this private,
+non-redistributed deployment (explicit user decision, recorded in
+provider-client-libraries' design.md D-L4).
+
+Two deployment notes found live while verifying this swap in the real
+Docker image (not just mocked tests):
+- The Bing engine shells out to a JS runtime for Bing's client-side
+  signing logic — the container needs Node.js installed (see Dockerfile);
+  without it this raises "Unable to find available javascript runtime".
+- One single call failed with `OSError(90, 'Message too long')` right
+  after a container restart (a transient HTTP/3-over-UDP hiccup from the
+  `niquests`/`qh3` stack this library depends on, not reproducible on
+  retry or on later calls) — if this recurs, it's a network-layer flake to
+  retry, not a code bug; `ProviderLookupError`'s no-fallback contract means
+  the caller sees it and can just ask again.
 """
 
 from __future__ import annotations
 
-import requests
+import translators
 
 from cache import ProviderLookupError
 from registry import registry
 
-_AUTH_URL = "https://edge.microsoft.com/translate/auth"
-_API_URL = "https://api.cognitive.microsofttranslator.com/translate"
-_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-
 
 class BingTranslateAdapter:
     def lookup(self, input_dict: dict) -> dict:
-        text = input_dict["text"]
-        from_lang = input_dict["from"]
-        to_lang = input_dict["to"]
-
         try:
-            auth_resp = requests.get(_AUTH_URL, headers=_HEADERS, timeout=10)
-            auth_resp.raise_for_status()
-            token = auth_resp.text
-
-            resp = requests.post(
-                _API_URL,
-                params={"api-version": "3.0", "from": from_lang if from_lang != "auto" else "", "to": to_lang},
-                json=[{"Text": text}],
-                headers={**_HEADERS, "Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-                timeout=10,
+            text = translators.translate_text(
+                input_dict["text"],
+                translator="bing",
+                from_language=input_dict["from"],
+                to_language=input_dict["to"],
             )
-            resp.raise_for_status()
-            data = resp.json()
-        except (requests.RequestException, ValueError) as exc:
+        except Exception as exc:  # translators.server.TranslatorError, or any lower-level failure
             raise ProviderLookupError(f"bing translate request failed: {exc}") from exc
 
-        return {"text": data[0]["translations"][0]["text"]}
+        return {"text": text}
 
 
 registry.register("translations", "bing", BingTranslateAdapter())

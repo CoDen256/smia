@@ -1,23 +1,29 @@
 """
 adapters/deepl.py — the `deepl` /translations provider: DeepL's official
-free-tier API (task 6.3). Unlike Forvo/ElevenLabs/filmot (whose APIs
-needed live probing this environment couldn't finish), DeepL's API is
-public, stable, documented, and needs nothing probed — only a
-`DEEPL_API_KEY` env var this environment doesn't have. Implemented fully;
-errors clearly (not silently) until a key is configured, same spirit as
-`auth.py`'s own "server misconfigured" check.
+API (task 6.3), via the official `deepl` Python package (D-L2,
+`provider-client-libraries`) rather than hand-rolled `requests` calls
+against `api-free.deepl.com` — the client handles free-vs-pro host
+selection and the auth-key header internally, so this adapter no longer
+needs to know the API's base URL at all.
+
+Still errors clearly (not silently) until a `DEEPL_API_KEY` is configured,
+same spirit as `auth.py`'s own "server misconfigured" check.
 """
 
 from __future__ import annotations
 
 import os
 
-import requests
+import deepl
 
 from cache import ProviderLookupError
 from registry import registry
 
-_API_URL = "https://api-free.deepl.com/v2/translate"
+# DeepL requires a region-qualified target for English/Portuguese ("EN" and
+# "PT" alone raise a client-side DeepLException, confirmed live) — this
+# adapter's callers pass plain "en"/"pt", so target_lang (only target, not
+# source — bare "EN" is accepted as source) gets disambiguated here.
+_TARGET_LANG_OVERRIDES = {"EN": "EN-US", "PT": "PT-PT"}
 
 
 class DeeplAdapter:
@@ -26,23 +32,20 @@ class DeeplAdapter:
         if not api_key:
             raise ProviderLookupError("deepl is not configured yet: needs a DEEPL_API_KEY")
 
+        target_lang = input_dict["to"].upper()
+        target_lang = _TARGET_LANG_OVERRIDES.get(target_lang, target_lang)
+
+        translator = deepl.Translator(api_key)
         try:
-            resp = requests.post(
-                _API_URL,
-                headers={"Authorization": f"DeepL-Auth-Key {api_key}"},
-                data={
-                    "text": input_dict["text"],
-                    "source_lang": input_dict["from"].upper(),
-                    "target_lang": input_dict["to"].upper(),
-                },
-                timeout=10,
+            result = translator.translate_text(
+                input_dict["text"],
+                source_lang=input_dict["from"].upper(),
+                target_lang=target_lang,
             )
-            resp.raise_for_status()
-            data = resp.json()
-        except (requests.RequestException, ValueError) as exc:
+        except deepl.DeepLException as exc:
             raise ProviderLookupError(f"deepl request failed: {exc}") from exc
 
-        return {"text": data["translations"][0]["text"]}
+        return {"text": result.text}
 
 
 registry.register("translations", "deepl", DeeplAdapter())

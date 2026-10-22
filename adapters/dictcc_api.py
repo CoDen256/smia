@@ -43,6 +43,13 @@ Confirmed shapes, live:
   doesn't map onto this service's Norwegian-shaped `adjektiv` keys anyway.
   Parsing stops at the first unrecognized POS block — best-effort, not a
   guess.
+
+## Why this adapter stays on raw HTTP (`provider-client-policy`)
+
+No published client exists for dict.cc's mobile-app backend at all — it's
+a reverse-engineered, undocumented surface (`app_translations.php` /
+`speak.audio.v2.php`), not a product dict.cc publishes an SDK for. Nothing
+to swap to.
 """
 
 from __future__ import annotations

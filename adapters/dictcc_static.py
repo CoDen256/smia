@@ -3,6 +3,10 @@ adapters/dictcc_static.py — the `dictcc_static` /translations provider: a
 direct lemma-pair lookup against the local import of dict.cc's NO-EN/
 NO-DE/DE-EN dumps (task 2.2). No network call, no inflections, no audio
 (D-DC5) — the dataset is `term1, term2, pos, tags` only.
+
+No client library applies here at all (`provider-client-policy`) — this
+isn't even a network call, just a lookup against a local import of a
+dataset dict.cc doesn't publish any client for in the first place.
 """
 
 from __future__ import annotations

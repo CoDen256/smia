@@ -14,6 +14,20 @@ reputation block on this sandbox's egress, not a logic bug; the request
 shape and response parsing match hover-translate's working production
 code exactly, and are covered by tests/test_translate_adapters.py's mocked
 response fixtures.
+
+## Why this adapter stays on raw HTTP (`provider-client-policy`, D-L3)
+
+Not "no library exists" — one does: the `translators` package (also used
+by `bing_translate.py`) supports Google too. The swap was explored and
+declined, not defaulted to: `translators.translate_text(..., translator=
+"google")` returns one plain string per call, discarding the `dict[]`
+part-of-speech/sense structure parsed directly above (`sentences[].trans`
++ `dict[]` → `context`). `translate-multi-candidate` depends on that
+structure to distinguish Norwegian `igjen`'s "again" sense from its
+"back"/"left" sense — a wrapper library that only returns a string can't
+carry that. Google Cloud Translate's official SDK doesn't apply either:
+it's a different, paid, documented product that doesn't talk to this
+endpoint (`translate_a/single`) at all.
 """
 
 from __future__ import annotations

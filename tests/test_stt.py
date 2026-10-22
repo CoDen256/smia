@@ -1,14 +1,16 @@
 """Tests for /stt (task 7.2): multipart audio body, provider required even
 with only one configured (D17 override of the usual lookup-cache default),
-and the hf_whisper adapter (task 7.1, mocked HTTP)."""
+and the hf_whisper adapter (task 7.1, mocking `huggingface_hub`'s
+`InferenceClient` per `provider-client-libraries` — not raw HTTP)."""
 
 from __future__ import annotations
 
 import io
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
+from huggingface_hub.errors import HfHubHTTPError
 
 from adapters.hf_whisper import HfWhisperAdapter
 from app import app as real_app
@@ -45,21 +47,29 @@ def test_hf_whisper_without_token_errors_clearly(monkeypatch):
 
 def test_hf_whisper_parses_text(monkeypatch):
     monkeypatch.setenv("HF_TOKEN", "fake-token")
-    resp = MagicMock()
-    resp.ok = True
-    resp.content = b'{"text": "hello world"}'
-    resp.json.return_value = {"text": "hello world"}
-    with patch("adapters.hf_whisper.requests.post", return_value=resp):
+    mock_client = MagicMock()
+    mock_client.automatic_speech_recognition.return_value = SimpleNamespace(text="hello world")
+    with patch("adapters.hf_whisper.InferenceClient", return_value=mock_client):
         result = HfWhisperAdapter().lookup({"audio_b64": "ZmFrZQ==", "lang": None})
     assert result == {"text": "hello world"}
 
 
+def test_hf_whisper_passes_language_via_extra_body(monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "fake-token")
+    mock_client = MagicMock()
+    mock_client.automatic_speech_recognition.return_value = SimpleNamespace(text="hallo")
+    with patch("adapters.hf_whisper.InferenceClient", return_value=mock_client):
+        HfWhisperAdapter().lookup({"audio_b64": "ZmFrZQ==", "lang": "de"})
+    _, kwargs = mock_client.automatic_speech_recognition.call_args
+    assert kwargs["extra_body"] == {"generate_kwargs": {"language": "de", "task": "transcribe"}}
+
+
 def test_hf_whisper_surfaces_model_loading_error(monkeypatch):
     monkeypatch.setenv("HF_TOKEN", "fake-token")
-    resp = MagicMock()
-    resp.ok = False
-    resp.content = b'{"error": "Model is loading", "estimated_time": 15.2}'
-    resp.json.return_value = {"error": "Model is loading", "estimated_time": 15.2}
-    with patch("adapters.hf_whisper.requests.post", return_value=resp):
+    mock_client = MagicMock()
+    mock_client.automatic_speech_recognition.side_effect = HfHubHTTPError(
+        "503 error", response=MagicMock(), server_message="Model is loading (~15s)"
+    )
+    with patch("adapters.hf_whisper.InferenceClient", return_value=mock_client):
         with pytest.raises(ProviderLookupError, match="loading"):
             HfWhisperAdapter().lookup({"audio_b64": "ZmFrZQ==", "lang": None})
