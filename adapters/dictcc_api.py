@@ -222,15 +222,27 @@ class DictccApiTranslateAdapter:
         data = _get_json({"s": input_dict["text"], "dir": dir_, "lp": lp})
         translations = data.get("translations", [])
         if not translations:
-            return {"text": ""}
+            return {"candidates": []}
 
-        best = translations[0]
-        text = best["term2"] if dir_ == 1 else best["term1"]
-        result = {"text": text}
-        entry_type = best.get("entry_type")
-        if entry_type:
-            result["context"] = f"[{entry_type}]"
-        return result
+        # Group by entry_type (translate-multi-candidate D-TM1/D-TM2):
+        # every entry reaches the caller, nothing picked or dropped —
+        # same-entry_type entries join into one candidate's text with "/";
+        # different entry_types become separate candidates. Order follows
+        # dict.cc's own translations[] order (its sort_num ranking), via
+        # first-seen insertion order of each entry_type group.
+        texts_by_type: dict[str | None, list[str]] = {}
+        for entry in translations:
+            entry_type = entry.get("entry_type") or None
+            text = entry["term2"] if dir_ == 1 else entry["term1"]
+            texts_by_type.setdefault(entry_type, []).append(text)
+
+        candidates = []
+        for entry_type, texts in texts_by_type.items():
+            candidate = {"text": "/".join(texts)}
+            if entry_type:
+                candidate["context"] = f"[{entry_type}]"
+            candidates.append(candidate)
+        return {"candidates": candidates}
 
 
 class DictccApiInflectAdapter:

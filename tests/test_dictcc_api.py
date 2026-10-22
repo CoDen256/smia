@@ -86,7 +86,7 @@ def _mock_response(json_data):
 def test_translate_parses_best_match():
     with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_KALV_RESPONSE)):
         result = DictccApiTranslateAdapter().lookup({"text": "kalv", "from": "nb", "to": "en"})
-    assert result == {"text": "calf", "context": "[noun]"}
+    assert result == {"candidates": [{"text": "calf", "context": "[noun]"}]}
 
 
 def test_translate_unsupported_pair_raises():
@@ -94,10 +94,26 @@ def test_translate_unsupported_pair_raises():
         DictccApiTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "fr"})
 
 
-def test_translate_no_match_returns_empty_text():
+def test_translate_no_match_returns_empty_candidates():
     with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_NO_TABLE_RESPONSE)):
         result = DictccApiTranslateAdapter().lookup({"text": "zzz", "from": "nb", "to": "en"})
-    assert result == {"text": ""}
+    assert result == {"candidates": []}
+
+
+def test_translate_groups_same_entry_type_into_one_candidate():
+    # Two "noun" entries for the same lemma must join into one candidate's
+    # text with "/", not become two separate candidates (translate-multi-
+    # candidate D-TM3's grouping rule, mirrored from dictcc_static).
+    response = {
+        "translations": [
+            {"id": 1, "term1": "calf", "term2": "kalv {m}", "entry_type": "noun", "subj_ids": "", "vt_usage": 0, "sort_num": 16},
+            {"id": 2, "term1": "calf", "term2": "kalve {m}", "entry_type": "noun", "subj_ids": "", "vt_usage": 0, "sort_num": 17},
+        ],
+        "dir": 2, "inflections": "", "inflections_repl": "", "inflections_info": "",
+    }
+    with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(response)):
+        result = DictccApiTranslateAdapter().lookup({"text": "calf", "from": "en", "to": "nb"})
+    assert result == {"candidates": [{"text": "kalv {m}/kalve {m}", "context": "[noun]"}]}
 
 
 def test_inflect_noun_full_four_slot_shape():

@@ -13,6 +13,11 @@ same spirit as `auth.py`'s own "server misconfigured" check.
 manual-link-fallback`, D-T1): every provider credential env var ends in
 `_TOKEN` (`HF_TOKEN`, `ELEVENLABS_TOKEN`) — this was the one adapter out
 of step with that, and with the name the user already uses in `.env`.
+
+Returns `{candidates: [{text}]}` (`translate-multi-candidate`): DeepL's
+`/translate` returns exactly one translation per call with no sense
+structure to recover, so exactly one candidate — not a shortcoming to fix,
+it's what the API actually returns (D-TM3).
 """
 
 from __future__ import annotations
@@ -50,7 +55,10 @@ class DeeplAdapter:
         except deepl.DeepLException as exc:
             raise ProviderLookupError(f"deepl request failed: {exc}") from exc
 
-        return {"text": result.text}
+        # DeepL's /translate returns exactly one translation with no sense
+        # structure — one candidate is correct and final here, not a
+        # placeholder pending future work (translate-multi-candidate D-TM3).
+        return {"candidates": [{"text": result.text}]}
 
 
 registry.register("translations", "deepl", DeeplAdapter())

@@ -31,7 +31,7 @@ def _mock_response(json_data=None, text_data=None, status=200):
     return resp
 
 
-def test_google_translate_parses_sentences_and_dict():
+def test_google_translate_parses_dict_entries_as_separate_candidates():
     fixture = {
         "src": "nb",
         "sentences": [{"orig": "hus", "trans": "house"}],
@@ -39,21 +39,39 @@ def test_google_translate_parses_sentences_and_dict():
     }
     with patch("adapters.google_translate.requests.get", return_value=_mock_response(json_data=fixture)):
         result = GoogleTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
-    assert result["text"] == "house"
-    assert "noun: house, building" in result["context"]
+    assert result == {"candidates": [{"text": "house/building", "context": "noun"}]}
 
 
-def test_google_translate_omits_context_when_absent():
+def test_google_translate_omits_context_when_no_dict():
     fixture = {"src": "nb", "sentences": [{"orig": "hus", "trans": "house"}]}
     with patch("adapters.google_translate.requests.get", return_value=_mock_response(json_data=fixture)):
         result = GoogleTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
-    assert result == {"text": "house"}
+    assert result == {"candidates": [{"text": "house"}]}
+
+
+def test_google_translate_multiple_dict_entries_become_separate_candidates():
+    fixture = {
+        "src": "nb",
+        "sentences": [{"orig": "rett", "trans": "right"}],
+        "dict": [
+            {"pos": "noun", "base_form": "rett", "terms": ["court"], "entry": []},
+            {"pos": "adjective", "base_form": "rett", "terms": ["straight"], "entry": []},
+            {"pos": "adverb", "base_form": "rett", "terms": ["straight"], "entry": []},
+        ],
+    }
+    with patch("adapters.google_translate.requests.get", return_value=_mock_response(json_data=fixture)):
+        result = GoogleTranslateAdapter().lookup({"text": "rett", "from": "nb", "to": "en"})
+    assert result["candidates"] == [
+        {"text": "court", "context": "noun"},
+        {"text": "straight", "context": "adjective"},
+        {"text": "straight", "context": "adverb"},
+    ]
 
 
 def test_bing_translate_parses_translation():
     with patch("adapters.bing_translate.translators.translate_text", return_value="house") as mock_translate:
         result = BingTranslateAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
-    assert result == {"text": "house"}
+    assert result == {"candidates": [{"text": "house"}]}
     _, kwargs = mock_translate.call_args
     assert kwargs["translator"] == "bing"
     assert kwargs["from_language"] == "nb"
@@ -78,7 +96,7 @@ def test_deepl_with_key_parses_translation(monkeypatch):
     mock_translator.translate_text.return_value = MagicMock(text="house")
     with patch("adapters.deepl.deepl.Translator", return_value=mock_translator):
         result = DeeplAdapter().lookup({"text": "hus", "from": "nb", "to": "en"})
-    assert result == {"text": "house"}
+    assert result == {"candidates": [{"text": "house"}]}
     _, kwargs = mock_translator.translate_text.call_args
     # bare "EN" is deprecated as a DeepL target_lang (confirmed live) —
     # the adapter must disambiguate it, not pass it through as-is.

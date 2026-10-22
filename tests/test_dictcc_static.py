@@ -19,20 +19,21 @@ def test_lookup_strips_grammar_annotation_from_query_but_not_answer(adapter):
     # "Haus" is stored as "Haus {n}" in the raw dump — the query must match
     # the bare lemma while the returned answer keeps its own annotation.
     result = adapter.lookup({"text": "Haus", "from": "de", "to": "en"})
-    assert result["text"] != ""
-    assert "context" in result
+    assert result["candidates"]
+    assert all(c["text"] != "" for c in result["candidates"])
+    assert any("context" in c for c in result["candidates"])
 
 
 def test_lookup_both_directions_of_a_pair(adapter):
     forward = adapter.lookup({"text": "hus", "from": "nb", "to": "en"})
-    assert forward["text"].lower() == "house"
+    assert any(c["text"].lower() == "house" for c in forward["candidates"])
     backward = adapter.lookup({"text": "house", "from": "en", "to": "nb"})
-    assert backward["text"]
+    assert backward["candidates"]
 
 
-def test_unknown_word_returns_empty_text(adapter):
+def test_unknown_word_returns_empty_candidates(adapter):
     result = adapter.lookup({"text": "qzxnotaword999", "from": "nb", "to": "en"})
-    assert result == {"text": ""}
+    assert result == {"candidates": []}
 
 
 def test_unsupported_pair_raises(adapter):

@@ -29,6 +29,11 @@ Docker image (not just mocked tests):
   retry or on later calls) — if this recurs, it's a network-layer flake to
   retry, not a code bug; `ProviderLookupError`'s no-fallback contract means
   the caller sees it and can just ask again.
+
+Returns `{candidates: [{text}]}` (`translate-multi-candidate`): `translators`
+returns one plain string per call with no sense structure to recover, so
+exactly one candidate — not a shortcoming to fix, it's what this access
+path actually returns (D-TM3).
 """
 
 from __future__ import annotations
@@ -51,7 +56,11 @@ class BingTranslateAdapter:
         except Exception as exc:  # translators.server.TranslatorError, or any lower-level failure
             raise ProviderLookupError(f"bing translate request failed: {exc}") from exc
 
-        return {"text": text}
+        # translators' Bing engine returns one plain string with no sense
+        # structure (unlike Google's dict[] — see google_translate.py) —
+        # one candidate is correct and final here, not a placeholder
+        # pending future work (translate-multi-candidate D-TM3).
+        return {"candidates": [{"text": text}]}
 
 
 registry.register("translations", "bing", BingTranslateAdapter())
