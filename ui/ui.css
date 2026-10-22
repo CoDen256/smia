@@ -50,3 +50,11 @@ pre {
   background:var(--card); border:1px solid var(--border); border-radius:6px;
   padding:10px; font-size:.76rem; overflow-x:auto; margin-top:12px; white-space:pre-wrap;
 }
+
+#tryAudioPlayers { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.audio-candidate {
+  background:var(--card); border:1px solid var(--border); border-radius:6px; padding:8px;
+}
+.audio-candidate .audio-label { font-size:.74rem; color:var(--muted); margin-bottom:6px; }
+.audio-candidate audio { width:100%; }
+#tryRecordBtn.recording { background:var(--bad); }

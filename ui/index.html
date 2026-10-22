@@ -52,12 +52,29 @@
       <select id="tryKind"></select>
       <label for="tryProvider">Provider</label>
       <select id="tryProvider"></select>
-      <label for="tryBody">Request body (JSON, minus "provider"/"forceRefresh")</label>
-      <textarea id="tryBody"></textarea>
+
+      <div id="tryBodyJson">
+        <label for="tryBody">Request body (JSON, minus "provider"/"forceRefresh")</label>
+        <textarea id="tryBody"></textarea>
+      </div>
+
+      <div id="tryBodyAudio" style="display:none">
+        <label for="tryAudioLang">Language (form field, not JSON)</label>
+        <input id="tryAudioLang" type="text" placeholder="e.g. nb">
+        <label for="tryAudioFile">Audio file</label>
+        <input id="tryAudioFile" type="file" accept="audio/*">
+        <div style="margin-top:8px">
+          <button id="tryRecordBtn" type="button">● Record from microphone</button>
+          <span id="tryRecordStatus" class="muted"></span>
+        </div>
+        <audio id="tryAudioPreview" controls style="display:none; margin-top:8px; width:100%"></audio>
+      </div>
+
       <label><input id="tryForceRefresh" type="checkbox"> Force refresh (bypass cache)</label>
       <button type="submit">Send</button>
     </form>
     <pre id="tryResult"></pre>
+    <div id="tryAudioPlayers"></div>
   </section>
 
 </div>
