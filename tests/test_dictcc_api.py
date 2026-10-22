@@ -100,6 +100,29 @@ def test_translate_no_match_returns_empty_candidates():
     assert result == {"candidates": []}
 
 
+def test_translate_untyped_phrase_entry_gets_source_phrase_as_context():
+    # Captured live: querying "igjen" (dir=2, nb from-side on term2)
+    # surfaces "Kom igjen!" -> "Come on!", an entry_type="" phrase entry
+    # unrelated to "igjen" as a standalone word — the source phrase (the
+    # from-language field, term2 here) becomes this candidate's context so
+    # it's clear which bigger phrase "Come on!" actually translates.
+    response = {
+        "translations": [
+            {"id": 1, "term1": "again", "term2": "igjen", "entry_type": "adv", "subj_ids": "", "vt_usage": 0, "sort_num": 12},
+            {"id": 2, "term1": "Come on!", "term2": "Kom igjen!", "entry_type": "", "subj_ids": "", "vt_usage": 0, "sort_num": 22},
+        ],
+        "dir": 2, "inflections": "", "inflections_repl": "", "inflections_info": "",
+    }
+    with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(response)):
+        result = DictccApiTranslateAdapter().lookup({"text": "igjen", "from": "nb", "to": "en"})
+    assert result == {
+        "candidates": [
+            {"text": "again", "context": "[adv]"},
+            {"text": "Come on!", "context": "Kom igjen!"},
+        ]
+    }
+
+
 def test_translate_groups_same_entry_type_into_one_candidate():
     # Two "noun" entries for the same lemma must join into one candidate's
     # text with "/", not become two separate candidates (translate-multi-

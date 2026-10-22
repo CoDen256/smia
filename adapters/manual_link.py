@@ -12,44 +12,45 @@ This is cached normally per `lookup-cache` like any other result, since the
 URL is a pure function of `(text, lang)` — no network call happens here at
 all.
 
-## URL shapes (tasks 3.1/3.2, confirmed/attempted live, not guessed)
+## URL shapes (tasks 3.1/3.2)
 
-- **Forvo**: `https://forvo.com/word/<word>/#language-<code>` — confirmed
-  live by loading a real word page (`forvo.com/word/hus/`) and reading its
-  actual per-language section anchor ids (`<article id="language-no">`,
-  not a bare `#no` fragment, which was the original guess). Forvo's own
-  language code for Norwegian is `no`, not `nb` (confirmed via its
-  `/languages/no/` link and `no.forvo.com` subdomain on that same page) —
-  Forvo's language list predates the Bokmål/Nynorsk distinction smia uses
-  internally, so `nb` is mapped to `no` here; other codes (`en`, `de`, ...)
-  pass through unchanged.
-- **filmot**: its public search UI is a client-rendered SPA whose search
-  box has no inspectable `name`/query-param wiring, and submitting a
-  search live redirected to `filmot.com/captcha-verify` — a CAPTCHA this
-  agent will not attempt to solve or bypass (policy), so the exact
-  results-page query-param shape could not be confirmed. Per design.md's
-  own anticipated fallback for exactly this case, this uses filmot's
-  generic public search path instead: `https://filmot.com/search/<query>`.
+- **Forvo**: `https://forvo.com/word/<word>/#<code>` — e.g.
+  `https://forvo.com/word/hygge/#no` (user-corrected; an earlier pass
+  guessed `#language-<code>` from a word page's section anchor id, but the
+  real shared/bookmarked link format is the bare code fragment). Forvo's
+  own language code for Norwegian is `no`, not `nb` — Forvo's language
+  list predates the Bokmål/Nynorsk distinction smia uses internally, so
+  `nb` is mapped to `no` here; other codes (`en`, `de`, ...) pass through
+  unchanged.
+- **filmot**: `https://filmot.com/search/<query>/1?gridView=1&lang=<code>`
+  — e.g. `https://filmot.com/search/jeg+er+norsk/1?gridView=1&lang=no`
+  (user-corrected; an earlier pass couldn't confirm this live after
+  hitting filmot's CAPTCHA on the search UI and fell back to a bare
+  `/search/<query>` path with no `/1?gridView=1&lang=` suffix). `<query>`
+  is the text with spaces as `+` (`quote_plus`, not `quote`); `<code>` uses
+  the same `nb`->`no` mapping as Forvo.
 """
 
 from __future__ import annotations
 
-from urllib.parse import quote
+from urllib.parse import quote, quote_plus
 
 from registry import registry
 
-# Forvo's language code predates the Bokmål/Nynorsk split; everything else
-# (en, de, ...) is already Forvo's own code and passes through unchanged.
-_FORVO_LANG_CODES = {"nb": "no"}
+# Both sites' language code predates the Bokmål/Nynorsk split; everything
+# else (en, de, ...) is already the target site's own code and passes
+# through unchanged.
+_MANUAL_LINK_LANG_CODES = {"nb": "no"}
 
 
 def _forvo_url(text: str, lang: str) -> str:
-    code = _FORVO_LANG_CODES.get(lang, lang)
-    return f"https://forvo.com/word/{quote(text)}/#language-{code}"
+    code = _MANUAL_LINK_LANG_CODES.get(lang, lang)
+    return f"https://forvo.com/word/{quote(text)}/#{code}"
 
 
 def _filmot_url(text: str, lang: str) -> str:
-    return f"https://filmot.com/search/{quote(text)}"
+    code = _MANUAL_LINK_LANG_CODES.get(lang, lang)
+    return f"https://filmot.com/search/{quote_plus(text)}/1?gridView=1&lang={code}"
 
 
 class ManualLinkAdapter:

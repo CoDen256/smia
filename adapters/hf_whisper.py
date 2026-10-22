@@ -62,4 +62,6 @@ class HfWhisperAdapter:
         return {"text": output.text or ""}
 
 
-registry.register("stt", "hf_whisper", HfWhisperAdapter())
+registry.register(
+    "stt", "hf_whisper", HfWhisperAdapter(), available=lambda: bool(os.environ.get("HF_TOKEN"))
+)

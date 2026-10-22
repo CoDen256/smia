@@ -230,17 +230,34 @@ class DictccApiTranslateAdapter:
         # different entry_types become separate candidates. Order follows
         # dict.cc's own translations[] order (its sort_num ranking), via
         # first-seen insertion order of each entry_type group.
+        text_field = "term2" if dir_ == 1 else "term1"
+        source_field = "term1" if dir_ == 1 else "term2"
+
         texts_by_type: dict[str | None, list[str]] = {}
+        # entry_type is "" (not just absent) for idiom/phrase entries
+        # dict.cc doesn't tag with a POS at all — e.g. querying "igjen"
+        # (just the word) surfaces "Kom igjen!" -> "Come on!" among the
+        # results, an entry_type-less phrase entry that happens to contain
+        # the query word, not a sense of "igjen" itself. A bare
+        # untagged "Come on!" candidate reads as an unexplained mismatch;
+        # the actual matched phrase (the source-language field, e.g.
+        # "Kom igjen!") is kept here as that candidate's context so it's
+        # clear which bigger phrase this translation came from (confirmed
+        # live against the real API, not guessed).
+        phrases_by_untyped: list[str] = []
         for entry in translations:
             entry_type = entry.get("entry_type") or None
-            text = entry["term2"] if dir_ == 1 else entry["term1"]
-            texts_by_type.setdefault(entry_type, []).append(text)
+            texts_by_type.setdefault(entry_type, []).append(entry[text_field])
+            if entry_type is None:
+                phrases_by_untyped.append(entry[source_field])
 
         candidates = []
         for entry_type, texts in texts_by_type.items():
             candidate = {"text": "/".join(texts)}
             if entry_type:
                 candidate["context"] = f"[{entry_type}]"
+            elif phrases_by_untyped:
+                candidate["context"] = "/".join(phrases_by_untyped)
             candidates.append(candidate)
         return {"candidates": candidates}
 

@@ -61,4 +61,6 @@ class DeeplAdapter:
         return {"candidates": [{"text": result.text}]}
 
 
-registry.register("translations", "deepl", DeeplAdapter())
+registry.register(
+    "translations", "deepl", DeeplAdapter(), available=lambda: bool(os.environ.get("DEEPL_TOKEN"))
+)

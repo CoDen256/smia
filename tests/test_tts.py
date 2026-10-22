@@ -34,22 +34,30 @@ def test_fetch_unknown_sha_returns_none():
 
 
 def test_forvo_url_maps_nb_to_forvos_own_code():
-    # Confirmed live: Forvo's own code for Norwegian is "no", not "nb",
-    # and the real per-language anchor is "#language-no", not bare "#no".
-    assert _forvo_url("hus", "nb") == "https://forvo.com/word/hus/#language-no"
+    # Forvo's own code for Norwegian is "no", not "nb"; the real
+    # shareable per-language link fragment is the bare code, not
+    # "#language-no" (user-corrected, see adapters/manual_link.py).
+    assert _forvo_url("hygge", "nb") == "https://forvo.com/word/hygge/#no"
 
 
 def test_forvo_url_passes_through_other_codes():
-    assert _forvo_url("Haus", "de") == "https://forvo.com/word/Haus/#language-de"
-    assert _forvo_url("house", "en") == "https://forvo.com/word/house/#language-en"
+    assert _forvo_url("Haus", "de") == "https://forvo.com/word/Haus/#de"
+    assert _forvo_url("house", "en") == "https://forvo.com/word/house/#en"
 
 
 def test_forvo_url_encodes_special_characters():
-    assert _forvo_url("på", "nb") == "https://forvo.com/word/p%C3%A5/#language-no"
+    assert _forvo_url("på", "nb") == "https://forvo.com/word/p%C3%A5/#no"
 
 
 def test_filmot_url_construction():
-    assert _filmot_url("hus", "nb") == "https://filmot.com/search/hus"
+    assert _filmot_url("hus", "nb") == "https://filmot.com/search/hus/1?gridView=1&lang=no"
+
+
+def test_filmot_url_joins_multi_word_query_with_plus():
+    assert (
+        _filmot_url("jeg er norsk", "nb")
+        == "https://filmot.com/search/jeg+er+norsk/1?gridView=1&lang=no"
+    )
 
 
 def test_manual_link_adapter_returns_empty_candidates_and_url():
