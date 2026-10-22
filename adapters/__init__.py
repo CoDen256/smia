@@ -21,4 +21,5 @@ from . import deepl  # noqa: F401
 from . import hf_whisper  # noqa: F401
 from . import dictcc_api  # noqa: F401
 from . import dictcc_static  # noqa: F401
+from . import elevenlabs  # noqa: F401
 from . import not_configured  # noqa: F401

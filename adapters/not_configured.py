@@ -1,10 +1,9 @@
 """
 adapters/not_configured.py — registered-but-unimplemented /tts providers
-(Forvo, ElevenLabs, filmot.com), per explicit user direction: each needs
-something this environment can't get on its own —
+(Forvo, filmot.com), per explicit user direction: each needs something
+this environment can't get on its own —
 
   - `forvo`: a Forvo API key (account signup required)
-  - `elevenlabs`: an ElevenLabs API key (account signup required)
   - `filmot`: an apikey query param — confirmed required by probing
     `filmot.com/api/getstats` live, no free/anonymous tier found
 
@@ -13,6 +12,9 @@ dict.cc's web scrape was stubbed here too in `smia-service-foundation`
 `add-dictcc-providers` (task 1.5/1.6), which found a different access path
 entirely (dict.cc's own mobile-app backend) and registered the real
 `dictcc_api` adapter instead; see `adapters/dictcc_api.py`.
+
+ElevenLabs' stub (`/tts` only) is un-stubbed by `add-elevenlabs-provider`
+— see `adapters/elevenlabs.py`, which also adds it as an `/stt` provider.
 
 They're still registered (so `GET /providers` lists them honestly as
 "configured" per this change's provider shortlist, and `provider` validation
@@ -36,5 +38,4 @@ class NotConfiguredAdapter:
 
 
 registry.register("tts", "forvo", NotConfiguredAdapter("forvo", "needs a Forvo API key"))
-registry.register("tts", "elevenlabs", NotConfiguredAdapter("elevenlabs", "needs an ElevenLabs API key"))
 registry.register("tts", "filmot", NotConfiguredAdapter("filmot", "needs a filmot.com API key"))
