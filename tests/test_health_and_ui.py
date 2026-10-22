@@ -51,3 +51,9 @@ def test_ui_index_and_assets_are_unauthenticated():
 def test_api_routes_still_require_auth_under_ui_unrelated_paths():
     c = _client()
     assert c.get("/providers").status_code == 401
+
+
+def test_missing_server_token_is_401_not_500(monkeypatch):
+    monkeypatch.delenv("SMIA_AUTH_TOKEN", raising=False)
+    resp = _client().get("/providers", headers=AUTH)
+    assert resp.status_code == 401

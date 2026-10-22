@@ -28,9 +28,14 @@ def register_auth(app):
             return None
 
         token = os.environ.get(AUTH_TOKEN_ENV)
-        if not token:
-            return jsonify({"error": "server misconfigured: SMIA_AUTH_TOKEN not set"}), 500
-
         header = request.headers.get("Authorization", "")
-        if not header.startswith("Bearer ") or header[len("Bearer "):] != token:
+        provided = header[len("Bearer "):] if header.startswith("Bearer ") else None
+
+        # An unset token and a wrong token both resolve to 401, not two
+        # different statuses — a caller can never distinguish "no token
+        # configured" from "wrong token" anyway (nothing it sends would
+        # work either way), and a 500 here previously leaked the server's
+        # misconfiguration to any unauthenticated caller instead of just
+        # looking like every other rejected request.
+        if not token or provided != token:
             return jsonify({"error": "unauthorized"}), 401

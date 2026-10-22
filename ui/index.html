@@ -46,14 +46,15 @@
 
   <section>
     <h2>Manual try-it</h2>
-    <p class="muted">Always bypasses the cache (provider-catalog spec) so a stale/missing entry never hides whether a provider is currently working.</p>
+    <p class="muted">Body is prefilled with a ready-to-send example when you change "Kind" — edit it freely. Check "Force refresh" to bypass the cache (provider-catalog spec), e.g. to confirm a provider is actually live rather than just serving a cached answer; leave it unchecked to see normal cache-hit behavior on a repeat send.</p>
     <form id="tryForm">
       <label for="tryKind">Kind</label>
       <select id="tryKind"></select>
       <label for="tryProvider">Provider</label>
       <select id="tryProvider"></select>
       <label for="tryBody">Request body (JSON, minus "provider"/"forceRefresh")</label>
-      <textarea id="tryBody" placeholder='{"word": "hus", "lang": "nb"}'></textarea>
+      <textarea id="tryBody"></textarea>
+      <label><input id="tryForceRefresh" type="checkbox"> Force refresh (bypass cache)</label>
       <button type="submit">Send</button>
     </form>
     <pre id="tryResult"></pre>

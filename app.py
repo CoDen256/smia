@@ -22,6 +22,7 @@ from db.session import session_scope
 
 app = Flask(__name__)
 CORS(app)
+app.json.ensure_ascii = False  # IPA/Norwegian characters as literal UTF-8, not \uXXXX escapes
 register_auth(app)
 
 import adapters  # noqa: F401,E402  (imported for registration side-effects only)

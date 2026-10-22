@@ -4,6 +4,16 @@
 
 const TOKEN_KEY = "smia_ui_token";
 
+// One ready-to-send example body per kind, prefilled into the try-it form
+// whenever the kind selector changes (not /stt — its request body is
+// multipart audio, not JSON, so this form can't represent it).
+const EXAMPLE_BODIES = {
+  inflections: { word: "hus", lang: "nb" },
+  ipa: { text: "hus", lang: "nb" },
+  tts: { text: "hus", lang: "nb" },
+  translations: { text: "hus", from: "nb", to: "en" },
+};
+
 function getToken() {
   return localStorage.getItem(TOKEN_KEY) || "";
 }
@@ -44,7 +54,7 @@ function renderHealth(rows) {
         : `<span class="muted">—</span>`;
       return `<tr>
         <td>${r.kind}</td><td>${r.provider}</td>
-        <td>${r.requestsCount}</td><td>${hitRate}%</td>
+        <td>${r.requestsCount}</td><td>${hitRate}% (${r.hitCount}/${r.requestsCount})</td>
         <td class="ok">${r.lastSuccessAt || "—"}</td>
         <td>${lastFail}</td>
       </tr>`;
@@ -52,27 +62,55 @@ function renderHealth(rows) {
     .join("");
 }
 
+// Rebuilds the kind/provider <option> lists from the current catalog
+// without losing whatever the operator already had selected — refreshAll()
+// runs after every try-it submission, and resetting the selectors each
+// time made every submission feel like it forgot what you'd just picked.
 function populateTryItSelectors(providers) {
   const kindSel = document.getElementById("tryKind");
   const prevKind = kindSel.value;
-  kindSel.innerHTML = Object.keys(providers)
-    .map((k) => `<option value="${k}">${k}</option>`)
-    .join("");
-  if (prevKind) kindSel.value = prevKind;
+  const firstLoad = !kindSel.dataset.initialized;
+  kindSel.dataset.initialized = "1";
+
+  const kinds = Object.keys(providers);
+  kindSel.innerHTML = kinds.map((k) => `<option value="${k}">${k}</option>`).join("");
+  if (kinds.includes(prevKind)) kindSel.value = prevKind;
+
   updateProviderSelector(providers);
-  kindSel.onchange = () => updateProviderSelector(providers);
+  kindSel.onchange = () => {
+    updateProviderSelector(providers);
+    prefillBody(kindSel.value);
+  };
+
+  if (firstLoad) prefillBody(kindSel.value);
 }
 
 function updateProviderSelector(providers) {
   const kind = document.getElementById("tryKind").value;
   const provSel = document.getElementById("tryProvider");
-  provSel.innerHTML = (providers[kind] || []).map((p) => `<option value="${p}">${p}</option>`).join("");
+  const prevProvider = provSel.value;
+  const available = providers[kind] || [];
+  provSel.innerHTML = available.map((p) => `<option value="${p}">${p}</option>`).join("");
+  if (available.includes(prevProvider)) provSel.value = prevProvider;
+}
+
+function prefillBody(kind) {
+  const bodyEl = document.getElementById("tryBody");
+  if (kind === "stt") {
+    bodyEl.value = "";
+    bodyEl.placeholder = "/stt takes multipart audio, not JSON — not supported by this form";
+    bodyEl.disabled = true;
+  } else {
+    bodyEl.disabled = false;
+    bodyEl.value = JSON.stringify(EXAMPLE_BODIES[kind] || {}, null, 2);
+  }
 }
 
 async function submitTryIt(event) {
   event.preventDefault();
   const kind = document.getElementById("tryKind").value;
   const provider = document.getElementById("tryProvider").value;
+  const forceRefresh = document.getElementById("tryForceRefresh").checked;
   let body;
   try {
     body = JSON.parse(document.getElementById("tryBody").value || "{}");
@@ -81,15 +119,25 @@ async function submitTryIt(event) {
     return;
   }
   body.provider = provider;
-  body.forceRefresh = true; // manual try-it always bypasses the cache (provider-catalog spec)
+  if (forceRefresh) body.forceRefresh = true;
 
   const resp = await fetch(`/${kind}`, {
     method: "POST",
     headers: { ...authHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const text = await resp.text();
-  document.getElementById("tryResult").textContent = `HTTP ${resp.status}\n${text}`;
+
+  // Parse-then-restringify (not resp.text()) for two reasons at once:
+  // pretty-printed indentation, and literal Unicode (IPA/Norwegian
+  // characters) instead of however the wire bytes happened to be escaped.
+  let display;
+  try {
+    const data = await resp.json();
+    display = JSON.stringify(data, null, 2);
+  } catch (e) {
+    display = await resp.text();
+  }
+  document.getElementById("tryResult").textContent = `HTTP ${resp.status}\n${display}`;
   refreshAll();
 }
 
