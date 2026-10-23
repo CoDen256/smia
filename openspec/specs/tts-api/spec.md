@@ -7,20 +7,20 @@
 ### Requirement: Audio lookup/synthesis returns multiple candidates
 `POST /tts` SHALL accept `{text, lang, provider}` (no `voice` field) and return `{provider, candidates: [{sha256, ...metadata}]}`, calling only the named provider. A provider that has more than one recording/rendering available for the input (e.g. multiple speakers) SHALL return one candidate per recording rather than picking one. Metadata fields (e.g. `gender`, `source`, `voice`) are present when the provider supplies them.
 
-#### Scenario: Synthesized provider
-- **WHEN** the named provider is a synthesis engine (e.g. ElevenLabs free tier)
-- **THEN** the system generates audio from `text`, stores it, and returns one or more candidates with `sha256` and available voice metadata (e.g. `gender`)
+#### Scenario: Synthesized candidate alongside a recording
+- **WHEN** the named provider can both locate a real recording and synthesize a voice for the same input (e.g. `dictcc_api`'s synthetic-voice candidate)
+- **THEN** the system generates the synthesized audio, stores it, and returns it as its own candidate with `sha256` and available voice metadata (e.g. `voice`), tagged distinctly from any recorded candidate
 
 #### Scenario: Recorded-speech provider with multiple speakers
-- **WHEN** the named provider has multiple real recordings for the same input (e.g. Forvo, `dictcc_api`)
+- **WHEN** the named provider has multiple real recordings for the same input (e.g. `dictcc_api`)
 - **THEN** the response's `candidates` array contains one entry per recording, each with its own `sha256`
 
 #### Scenario: Recorded-speech provider with one match
-- **WHEN** the named provider locates exactly one real recording (e.g. a filmot-located YouTube clip)
+- **WHEN** the named provider locates exactly one real recording (e.g. kaikki.org's `sounds[].mp3_url`)
 - **THEN** the response's `candidates` array contains exactly one entry
 
 ### Requirement: Provider set
-`/tts` SHALL be backed by: Forvo (real recordings), `dictcc_api` (dict.cc's mobile-app audio backend, real recordings and synthesized voices), kaikki.org (`sounds[].mp3_url`, real recordings), filmot.com (locates a real spoken instance in YouTube captions and slices that audio), and ElevenLabs free tier (synthesis). piper is explicitly excluded from this change.
+`/tts` SHALL be backed by: Forvo (manual-link fallback — no free tier available, see the manual-link requirement below), `dictcc_api` (dict.cc's mobile-app audio backend, real recordings and synthesized voices), kaikki.org (`sounds[].mp3_url`, real recordings), and filmot.com (manual-link fallback — no free tier available, see the manual-link requirement below). piper is explicitly excluded from this change. ElevenLabs was implemented and live-tested as a synthesis provider in `add-elevenlabs-provider`, then unregistered after live testing found its free tier 402s synthesizing with any voice this adapter can reach — it is not part of the provider set.
 
 #### Scenario: No local synthesis fallback
 - **WHEN** no configured provider has audio for the requested input
@@ -29,6 +29,21 @@
 #### Scenario: dictcc_api returns both a recording and a synthesized candidate
 - **WHEN** `provider=dictcc_api` is used for a word that dict.cc has both a human recording and a synthesized voice for
 - **THEN** the response's `candidates` array contains one entry per source, each tagged with a `source` of `human` or `synthetic` (and, for synthetic candidates, the `voice` used)
+
+### Requirement: Manual-link response for providers with no accessible API
+Providers with no free or otherwise accessible API (`forvo`, `filmot`) SHALL NOT be called over HTTP. Instead, `POST /tts` for these providers SHALL return `{provider, candidates: [], url}`, where `url` is a link to that provider's own website with the requested word/phrase and language pre-filled, for the caller to open and check manually. This is not an error — `candidates: []` combined with a present `url` is this adapter type's normal, successful response.
+
+#### Scenario: Forvo manual link
+- **WHEN** `provider=forvo` is used with a given `text`/`lang`
+- **THEN** the response is `{provider: "forvo", candidates: [], url}`, where `url` opens Forvo's page for that word/language
+
+#### Scenario: filmot manual link
+- **WHEN** `provider=filmot` is used with a given `text`/`lang`
+- **THEN** the response is `{provider: "filmot", candidates: [], url}`, where `url` opens filmot's caption search pre-filled with that phrase/language
+
+#### Scenario: Manual-link responses are cacheable like any other result
+- **WHEN** the same `(forvo|filmot, text, lang)` request repeats
+- **THEN** the cached `{candidates: [], url}` response is served, per the `lookup-cache` contract — no repeated URL construction needed, since the URL is deterministic from the input
 
 ### Requirement: Audio bytes served by content hash
 The system SHALL expose `GET /tts/{sha256}` returning the raw audio bytes for a previously created clip, independent of the `lookup-cache` metadata-only `GET /<kind>/{id}` contract.

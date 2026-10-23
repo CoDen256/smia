@@ -17,9 +17,11 @@
 ## Decisions
 
 ### D-TM1: Grouping key is the provider's own sense/context grouping, not inferred
-**Decision**: each adapter groups its provider's raw translations using whatever grouping that provider's data already encodes (Google: `dict[]` entry boundaries; dict.cc: `entry_type` per `translations[]` row), rather than smia trying to infer "same meaning" across translations itself.
+**Decision**: each adapter groups its provider's raw translations using whatever grouping that provider's data already encodes (Google: `dict[]` entry boundaries; dict.cc: `(entry_type, source phrase)` per `translations[]` row — see the correction below), rather than smia trying to infer "same meaning" across translations itself.
 
 **Why**: inferring sense-equivalence across arbitrary translated strings is a hard, unreliable problem (and out of scope for an API layer); every provider in this set already encodes its own grouping, so using it directly is both correct and simple.
+
+**Corrected after initial completion** (user-reported): the first implementation grouped dict.cc's `dictcc_api` purely by `entry_type`. Live testing against "komme" surfaced the gap — all 18 of its entries are tagged `entry_type="verb"`, covering a dozen distinct phrasal-verb senses ("å komme", "å komme over", "å komme i vei", ...), which `entry_type`-only grouping collapsed into one unreadable candidate. `entry_type` alone is too coarse; dict.cc's actual per-sense boundary is the *source phrase itself* (the field matching the query's language). Grouping key is now `(entry_type, source phrase)` — entries sharing the identical source phrase (true synonyms, e.g. three entries all reading "å komme i vei") still join with `/`; a different phrase becomes its own candidate, carrying that phrase (infinitive marker stripped) in `context`. This generalizes and subsumes a separate one-off fix for dict.cc's untyped (`entry_type=""`) "Kom igjen!" -> "Come on!" phrase entry, which needed the same source-phrase-as-context treatment for a different reason (no POS tag at all, not an over-broad one).
 
 ### D-TM2: `/` join for same-context alternatives
 **Decision**: within one context group, join multiple translation strings with `/` (e.g. `back/left`) into that one candidate's `text`.

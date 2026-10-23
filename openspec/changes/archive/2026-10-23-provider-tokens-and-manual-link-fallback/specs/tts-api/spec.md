@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Provider set
-`/tts` SHALL be backed by: Forvo (manual-link fallback — no free tier available, see the manual-link requirement below), `dictcc_api` (dict.cc's mobile-app audio backend, real recordings and synthesized voices), kaikki.org (`sounds[].mp3_url`, real recordings), filmot.com (manual-link fallback — no free tier available, see the manual-link requirement below), and ElevenLabs free tier (synthesis). piper is explicitly excluded from this change.
+`/tts` SHALL be backed by: Forvo (manual-link fallback — no free tier available, see the manual-link requirement below), `dictcc_api` (dict.cc's mobile-app audio backend, real recordings and synthesized voices), kaikki.org (`sounds[].mp3_url`, real recordings), and filmot.com (manual-link fallback — no free tier available, see the manual-link requirement below). piper is explicitly excluded from this change. ElevenLabs was implemented and live-tested as a synthesis provider in `add-elevenlabs-provider`, then unregistered after live testing found its free tier 402s synthesizing with any voice this adapter can reach — it is not part of the provider set.
 
 #### Scenario: No local synthesis fallback
 - **WHEN** no configured provider has audio for the requested input

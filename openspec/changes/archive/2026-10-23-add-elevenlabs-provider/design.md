@@ -1,3 +1,7 @@
+## Outcome (post-completion deviation)
+
+`/tts` was implemented per D-EL2 below and live-tested (tasks.md 3.1): listing voices itself can 401 even with a valid token (missing `voices_read` scope), handled with a premade-voice ("Rachel") fallback. But synthesizing with *any* shared/library voice — including that fallback — returns 402 `paid_plan_required` on a free-tier account. Since `_pick_voice` can only ever select a shared/library voice (there's no account-owned voice to select instead), there is no voice this adapter can use on this account tier. `elevenlabs` was unregistered from `/tts` entirely afterward (`ElevenLabsTtsAdapter`, `_pick_voice`, and the voice-fallback constants deleted) — a permanent block on this tier, not a sometimes-failing provider worth leaving registered. `/stt` is unaffected by this and remains as designed below. This change's `tts-api` spec delta was removed accordingly; `tts-api`'s provider set no longer includes `elevenlabs` in any form.
+
 ## Context
 
 ElevenLabs was scoped as a `/tts` provider from the start (`smia-service-foundation` D-S7) but left as a `NotConfiguredAdapter` stub because this environment couldn't probe its real API/credential shape at the time. The user now has a working `ELEVENLABS_TOKEN` for local testing and wants both `/tts` (as originally scoped) and `/stt` (newly identified — ElevenLabs also offers speech-to-text) implemented against the official SDK (per `provider-client-libraries`' `provider-client-policy`).

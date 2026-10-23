@@ -2,6 +2,8 @@
 
 ElevenLabs is currently registered as a `/tts` provider only as a `NotConfiguredAdapter` stub (`adapters/not_configured.py`) — it was deferred in `smia-service-foundation` because the credential/exact API shape needed live probing this environment couldn't finish at the time. The user now has an `ELEVENLABS_TOKEN` available for testing and wants it implemented for real — both as the `/tts` synthesis provider it was always scoped for, and, newly, as an `/stt` provider too, since ElevenLabs also offers a maintained speech-to-text endpoint.
 
+> **Outcome note (post-completion deviation)**: `/tts` was implemented and live-tested as scoped below, but further live testing afterward found every voice it can reach is a shared/library voice, and ElevenLabs' API 402s synthesizing with any shared/library voice on a free-tier account — there is no voice this adapter can select that this account tier can actually use. `elevenlabs` was subsequently unregistered from `/tts` entirely (see `tasks.md` 4.1); `/stt` is unaffected. The rest of this proposal is left as originally written to record what was scoped and why.
+
 ## What Changes
 
 - Implement a real `elevenlabs` adapter using the official `elevenlabs` Python SDK (per `provider-client-policy` — a legitimate maintained client exists), reading `ELEVENLABS_TOKEN` from the environment.
@@ -15,8 +17,8 @@ ElevenLabs is currently registered as a `/tts` provider only as a `NotConfigured
 _None._
 
 ### Modified Capabilities
-- `tts-api`: provider set grows to include a real `elevenlabs` adapter (replacing the not-configured stub).
 - `stt-api`: provider set grows from `{hf_whisper}` to `{hf_whisper, elevenlabs}`.
+- ~~`tts-api`: provider set grows to include a real `elevenlabs` adapter (replacing the not-configured stub).~~ **Reverted post-completion** (see outcome note above) — `elevenlabs` is not part of `tts-api`'s final provider set, so this change no longer carries a `tts-api` spec delta.
 
 ## Impact
 

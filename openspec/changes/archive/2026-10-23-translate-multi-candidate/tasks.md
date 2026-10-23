@@ -6,7 +6,7 @@
 
 ## 2. `dictcc_api` and `dictcc_static`
 
-- [x] 2.1 Rewrite `DictccApiTranslateAdapter.lookup()` to iterate all of `translations[]` (not just `[0]`), grouping by `entry_type` and joining same-`entry_type` entries' text with `/`
+- [x] 2.1 Rewrite `DictccApiTranslateAdapter.lookup()` to iterate all of `translations[]` (not just `[0]`), grouping by `entry_type` and joining same-`entry_type` entries' text with `/`. **Corrected post-completion** (user-reported): live testing against "komme" found `entry_type` alone too coarse — all 18 entries are tagged `entry_type="verb"` but cover a dozen distinct phrasal-verb senses, which this grouping collapsed into one candidate. Regrouped by `(entry_type, source phrase)` instead — see 2.4.
 - [x] 2.2 Rewrite `dictcc_static`'s translation lookup to return all matching rows for the lemma pair, grouped by `(pos, tags)` the same way (dict.cc's static dump has no `entry_type` column — `pos`+`tags` together are the equivalent sense boundary)
 - [x] 2.3 Update `tests/test_dictcc_api.py` and `tests/test_dictcc_static.py` for the new grouped-candidates shape
 
@@ -20,6 +20,12 @@
 - [x] 4.1 Confirm the generic `/translations` route/runner (`routes/generic.py`, `cache.py`) needs no change to carry a `candidates[]`-shaped payload (it should already be kind-agnostic, proven by `/ipa`/`/tts`) — fix if any `/translations`-specific flat-shape assumption is found. Confirmed: `cache.py`'s `run_lookup()` only merges `{"provider": provider, **result}` and `routes/generic.py` only `jsonify()`s the payload — neither inspects `text`/`candidates` keys. No change needed.
 - [x] 4.2 Update `tests/test_translate_adapters.py` for every adapter's new `candidates[]` shape
 - [x] 4.3 Update `tests/test_routes.py` if it has any `/translations`-specific flat-shape assertions. Confirmed: no `/translations`-specific assertions exist in this file. No change needed.
+
+## 6. Post-completion fixes (user-reported, after initial archive-readiness)
+
+- [x] 6.1 Regroup `DictccApiTranslateAdapter` by `(entry_type, source phrase)` instead of `entry_type` alone — fixes both the "komme" over-grouping (2.1) and generalizes/subsumes a separate one-off fix for the untyped (`entry_type=""`) "Kom igjen!" -> "Come on!" phrase entry, which needed its matched source phrase surfaced as `context` so it doesn't read as an unexplained mismatch. Live-verified against "komme" (13 separate candidates, each with phrase-specific `context`) and "igjen" (9 candidates, same treatment) through the rebuilt Docker container.
+- [x] 6.2 `dictcc_static`: strip the Norwegian verb infinitive marker ("å komme" -> "komme") in `scripts/import_dictcc_static.py`'s `_clean()`, same as `dictcc_api`'s own `_normalize_label` — a bare-infinitive query like "komme" matched nothing, since every Norwegian verb row is stored with the marker. Reimported `providers/dict/*.txt` to apply this to already-stored rows (existing deployments need the same reimport, or a fresh volume).
+- [x] 6.3 Updated `tests/test_dictcc_api.py` and `tests/test_dictcc_static.py` for both fixes; full suite re-verified (90/90 passing after 6.1-6.2, including the `/ipa` field-rename work landed in the same follow-up session).
 
 ## 5. Verify
 

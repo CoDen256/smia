@@ -10,8 +10,8 @@
   - `google_translate`: Google's `dict[]` already groups terms by part-of-speech/sense (`dict[].terms[]`) — each `dict[]` entry becomes a candidate (or multiple candidates if Google's structure distinguishes finer sub-senses), `text` built by joining that entry's terms with `/`, `context` carrying the sense label Google provides.
   - `bing_translate`: per `provider-client-libraries`, this adapter moves to the `translators` package, which (like the current hand-rolled call) returns one translation per call with no sense structure — stays one candidate, correct and expected, not a bug.
   - `deepl`: DeepL's `/translate` returns one translation per call; stays one candidate — this is not a shortcoming to fix, it's what DeepL's API actually returns.
-  - `dictcc_api`: currently takes `translations[0]` and discards the rest — fixed to return every entry, grouped by `entry_type` (e.g. `[zool.]`), with same-context entries' `term1`/`term2` joined by `/`.
-  - `dictcc_static`: currently returns the first matching row — fixed to return every matching row for the lemma pair, grouped the same way.
+  - `dictcc_api`: currently takes `translations[0]` and discards the rest — fixed to return every entry, grouped by `(entry_type, source phrase)` (e.g. `[zool.]`, or the specific phrase like "komme over" when several entries share an `entry_type` but are different phrasal senses — corrected post-completion after live testing against "komme" found `entry_type` alone too coarse, see `design.md`'s D-TM1), with same-group entries' `term1`/`term2` joined by `/`.
+  - `dictcc_static`: currently returns the first matching row — fixed to return every matching row for the lemma pair, grouped by `(pos, tags)` the same way (this dataset has no `entry_type` column).
 - `libretranslate` is out of scope here entirely — `provider-client-libraries` drops that provider from `/translations` altogether, so there's no adapter left to fix.
 - No endpoint other than `/translations` is affected.
 

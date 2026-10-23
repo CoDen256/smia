@@ -30,13 +30,13 @@ Credential-bearing adapters (`hf_whisper`, `deepl`, soon `elevenlabs`) already r
 
 **Why**: these two are permanently manual by the nature of having no accessible API, not temporarily unconfigured — the response should say so honestly rather than erroring forever. Caching per `lookup-cache` still applies normally since the URL is a pure function of `(text, lang)`.
 
-**URL construction** (confirm exact query-param shapes at implementation time against the live sites, same spirit as `dictcc_api`'s confirmed-live `lp`/`dir` mapping):
-- Forvo: `https://forvo.com/word/<url-encoded text>/#<lang>` is Forvo's known public word-page pattern.
-- filmot: a caption-search URL pre-filled with the phrase; filmot's actual search URL/query-param shape needs confirming against the live site (its API needs a key per `not_configured.py`'s existing note, but the plain web search page may not).
+**URL construction — final, confirmed shapes** (an implementation-time pass got both wrong on the first try; see `tasks.md` 3.1/3.2 for the detour and what corrected it):
+- Forvo: `https://forvo.com/word/<url-encoded text>/#<code>` — bare language-code fragment (not `#language-<code>`, which is an on-page section anchor id, not the shareable link format). `<code>` uses Forvo's own scheme (`nb`->`no`, others pass through).
+- filmot: `https://filmot.com/search/<url-encoded text, +-joined>/1?gridView=1&lang=<code>` — confirmed from a real shared filmot results link, not the public search page's client-rendered form (which CAPTCHA-blocked submission and couldn't be inspected directly). Same `nb`->`no` code mapping as Forvo.
 
 ## Risks / Trade-offs
 
-- **[Risk]** filmot's exact public search URL shape is unconfirmed (only its keyed API was probed in `smia-service-foundation`). → **Mitigation**: confirm the public (non-API) search URL at task time; if filmot's search page itself requires a key/login to view results, fall back to a generic `https://filmot.com/search/<query>` best-effort link rather than blocking this change on it.
+- **[Risk]** filmot's exact public search URL shape was unconfirmed at design time (only its keyed API was probed in `smia-service-foundation`). → **Resolved**: confirmed from a real shared filmot results link (see `tasks.md` 3.2) — `https://filmot.com/search/<query>/1?gridView=1&lang=<code>`.
 - **[Risk]** Renaming `DEEPL_API_KEY`→`DEEPL_TOKEN` is a breaking env-var rename for anyone who already set the old name. → **Mitigation**: low risk — this service isn't deployed yet; document the rename in this change's tasks so it's a deliberate, one-time cutover, not silent.
 
 ## Migration Plan
@@ -48,7 +48,11 @@ No data migration. Sequencing:
 4. Implement the manual-link adapter and register it for `forvo`/`filmot`, removing their `NotConfiguredAdapter` entries.
 5. Update tests.
 
-## Open Questions
+## Open Questions (resolved)
 
-- filmot's actual public search URL shape (needs live confirmation).
-- Whether Forvo's `#<lang>` fragment uses the same two-letter codes smia uses internally (`nb`, `en`, `de`) or Forvo's own language code scheme — confirm before hardcoding.
+- ~~filmot's actual public search URL shape (needs live confirmation).~~ Confirmed: `https://filmot.com/search/<query>/1?gridView=1&lang=<code>`.
+- ~~Whether Forvo's `#<lang>` fragment uses the same two-letter codes smia uses internally (`nb`, `en`, `de`) or Forvo's own language code scheme.~~ Confirmed: Forvo's own scheme (`nb`->`no`, others pass through), bare `#<code>` fragment.
+
+## Related follow-up (not part of this change's scope)
+
+Dynamic per-provider unregistration (`registry.register(..., available=lambda: bool(os.environ.get("X_TOKEN")))`, excluding a provider from `providers_for`/`resolve_provider`/`GET /providers` when its token isn't configured) was added afterward, wired up for `deepl`, `hf_whisper`, and `elevenlabs`. It builds on this change's token-naming/wiring work but is a `provider-catalog`-capability behavior, not scoped here — not tracked by this change's own tasks/spec delta.
