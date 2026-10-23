@@ -34,7 +34,7 @@ class KaikkiIpaAdapter:
                 ipa = sound.get("ipa")
                 if not ipa:
                     continue
-                candidate = {"phonemic": ipa}
+                candidate = {"ipa": ipa}
                 tags = sound.get("tags")
                 if tags:
                     candidate["variety"] = ",".join(tags)

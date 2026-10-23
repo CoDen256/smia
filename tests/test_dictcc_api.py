@@ -139,6 +139,42 @@ def test_translate_groups_same_entry_type_into_one_candidate():
     assert result == {"candidates": [{"text": "kalv {m}/kalve {m}", "context": "[noun]"}]}
 
 
+_KOMME_RESPONSE = {
+    "translations": [
+        {"id": 1, "term1": "to come", "term2": "å komme", "entry_type": "verb", "subj_ids": "", "vt_usage": 8, "sort_num": 14},
+        {"id": 2, "term1": "to overcome", "term2": "å komme over", "entry_type": "verb", "subj_ids": "", "vt_usage": 0, "sort_num": 24},
+        {"id": 3, "term1": "to recover", "term2": "å komme seg", "entry_type": "verb", "subj_ids": "", "vt_usage": 0, "sort_num": 24},
+        {"id": 4, "term1": "to get better [in health]", "term2": "å komme seg", "entry_type": "verb", "subj_ids": ",14,", "vt_usage": 0, "sort_num": 24},
+        {"id": 5, "term1": "to start", "term2": "å komme i vei", "entry_type": "verb", "subj_ids": "", "vt_usage": 0, "sort_num": 34},
+        {"id": 6, "term1": "to get on", "term2": "å komme i vei", "entry_type": "verb", "subj_ids": "", "vt_usage": 0, "sort_num": 34},
+    ],
+    "dir": 2, "inflections": "", "inflections_repl": "", "inflections_info": "",
+}
+
+
+def test_translate_separates_distinct_phrasal_verb_senses():
+    # Captured live (trimmed): querying "komme" returns 18 entries ALL
+    # tagged entry_type="verb" — grouping by entry_type alone (the earlier
+    # approach) collapsed every phrasal-verb sense into one unreadable
+    # candidate. Entries sharing the identical source phrase ("å komme
+    # seg" x2, "å komme i vei" x2 here) are genuine synonyms and join with
+    # "/"; a different phrase ("å komme over") becomes its own candidate.
+    # The bare "å komme" match needs no phrase echoed back in its context
+    # (it's exactly the query, modulo the infinitive marker); the others
+    # show their phrase (marker stripped) so it's clear what's being
+    # translated.
+    with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_KOMME_RESPONSE)):
+        result = DictccApiTranslateAdapter().lookup({"text": "komme", "from": "nb", "to": "en"})
+    assert result == {
+        "candidates": [
+            {"text": "to come", "context": "[verb]"},
+            {"text": "to overcome", "context": "[verb] komme over"},
+            {"text": "to recover/to get better [in health]", "context": "[verb] komme seg"},
+            {"text": "to start/to get on", "context": "[verb] komme i vei"},
+        ]
+    }
+
+
 def test_inflect_noun_full_four_slot_shape():
     with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_KALV_RESPONSE)):
         result = DictccApiInflectAdapter().lookup({"word": "kalv", "lang": "nb"})

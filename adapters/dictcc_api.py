@@ -130,6 +130,29 @@ def _get_json(params: dict) -> dict:
         raise ProviderLookupError(f"dict.cc request failed: {exc}") from exc
 
 
+_ANNOTATION_RE = re.compile(r"[\{\[][^}\]]*[\}\]]")
+
+
+def _strip_infinitive_marker(phrase: str) -> str:
+    return phrase[2:].lstrip() if phrase.lower().startswith("å ") else phrase
+
+
+def _normalize_dictcc_phrase(phrase: str) -> str:
+    """For comparing a dict.cc source-language field against the bare query
+    word: strips grammar annotations dict.cc appends to the word itself
+    (`"kalv {m}"` -> `"kalv"`) and the verb infinitive marker (`"å komme"`
+    -> `"komme"`), so a direct word match isn't mistaken for a distinct
+    phrase just because of that annotation/marker."""
+    return _strip_infinitive_marker(_ANNOTATION_RE.sub("", phrase).strip()).strip().lower()
+
+
+def _display_dictcc_phrase(phrase: str) -> str:
+    """For showing a source phrase as context: only strips the infinitive
+    marker (annotations like "{m}" are kept — they're part of what's
+    actually being displayed, unlike in `_normalize_dictcc_phrase`)."""
+    return _strip_infinitive_marker(phrase)
+
+
 def _normalize_label(label: str) -> str:
     label = label.strip()
     label = re.sub(r"^(article|å)\s+", "", label)
@@ -224,40 +247,49 @@ class DictccApiTranslateAdapter:
         if not translations:
             return {"candidates": []}
 
-        # Group by entry_type (translate-multi-candidate D-TM1/D-TM2):
-        # every entry reaches the caller, nothing picked or dropped —
-        # same-entry_type entries join into one candidate's text with "/";
-        # different entry_types become separate candidates. Order follows
-        # dict.cc's own translations[] order (its sort_num ranking), via
-        # first-seen insertion order of each entry_type group.
+        # Group by (entry_type, source phrase) — translate-multi-candidate
+        # D-TM1/D-TM2 — NOT by entry_type alone (the earlier approach):
+        # live-confirmed querying "komme" returns 18 entries all tagged
+        # "verb", covering a dozen distinct phrasal-verb senses ("å komme",
+        # "å komme over", "å komme i vei", ...), which entry_type-only
+        # grouping collapsed into one unreadable giant candidate. The
+        # source-language field (the side matching the query's language —
+        # term2 here, term1 if dir_==1) is dict.cc's own notion of "which
+        # exact phrase was matched"; only entries matching the identical
+        # source phrase (verbatim string — e.g. three entries all reading
+        # "å komme i vei") are true same-sense synonyms and join with "/".
+        # Entries sharing just an entry_type but a different source phrase
+        # become separate candidates, each carrying that phrase in its
+        # context so it's clear which bigger expression it came from.
         text_field = "term2" if dir_ == 1 else "term1"
         source_field = "term1" if dir_ == 1 else "term2"
+        query_norm = _normalize_dictcc_phrase(input_dict["text"])
 
-        texts_by_type: dict[str | None, list[str]] = {}
-        # entry_type is "" (not just absent) for idiom/phrase entries
-        # dict.cc doesn't tag with a POS at all — e.g. querying "igjen"
-        # (just the word) surfaces "Kom igjen!" -> "Come on!" among the
-        # results, an entry_type-less phrase entry that happens to contain
-        # the query word, not a sense of "igjen" itself. A bare
-        # untagged "Come on!" candidate reads as an unexplained mismatch;
-        # the actual matched phrase (the source-language field, e.g.
-        # "Kom igjen!") is kept here as that candidate's context so it's
-        # clear which bigger phrase this translation came from (confirmed
-        # live against the real API, not guessed).
-        phrases_by_untyped: list[str] = []
+        groups: dict[tuple[str | None, str], list[str]] = {}
+        order: list[tuple[str | None, str]] = []
         for entry in translations:
             entry_type = entry.get("entry_type") or None
-            texts_by_type.setdefault(entry_type, []).append(entry[text_field])
-            if entry_type is None:
-                phrases_by_untyped.append(entry[source_field])
+            source = entry[source_field]
+            key = (entry_type, source)
+            if key not in groups:
+                groups[key] = []
+                order.append(key)
+            groups[key].append(entry[text_field])
 
         candidates = []
-        for entry_type, texts in texts_by_type.items():
-            candidate = {"text": "/".join(texts)}
+        for entry_type, source in order:
+            candidate = {"text": "/".join(groups[(entry_type, source)])}
+            context_parts = []
             if entry_type:
-                candidate["context"] = f"[{entry_type}]"
-            elif phrases_by_untyped:
-                candidate["context"] = "/".join(phrases_by_untyped)
+                context_parts.append(f"[{entry_type}]")
+            # Only surface the source phrase when it's more than the bare
+            # query word (stripped of dict.cc's own grammar annotations
+            # like "{m}" and the verb infinitive marker "å ") — a direct
+            # word match doesn't need its own text echoed back.
+            if _normalize_dictcc_phrase(source) != query_norm:
+                context_parts.append(_display_dictcc_phrase(source))
+            if context_parts:
+                candidate["context"] = " ".join(context_parts)
             candidates.append(candidate)
         return {"candidates": candidates}
 

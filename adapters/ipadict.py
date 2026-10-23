@@ -16,7 +16,7 @@ class IpaDictAdapter:
             rows = db.execute(
                 text("SELECT ipa FROM ipa_dict_entry WHERE wordform = :word"), {"word": word}
             ).all()
-        return {"candidates": [{"phonemic": ipa} for (ipa,) in rows]}
+        return {"candidates": [{"ipa": ipa} for (ipa,) in rows]}
 
 
 registry.register("ipa", "ipadict", IpaDictAdapter())

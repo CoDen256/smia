@@ -37,9 +37,17 @@ _VALID_PAIRS = {"no_en", "no_de", "de_en"}
 # matching those is out of scope for a best-effort provider.
 _TRAILING_ANNOTATION_RE = re.compile(r"(\s*[\{\[<][^}\]>]*[\}\]>])+\s*$")
 
+# Strips the Norwegian verb infinitive marker ("å komme" -> "komme") the
+# same way adapters/dictcc_api.py's _normalize_label does for its own
+# inflection-table labels — the raw dump's Norwegian verb entries are
+# always stored with this marker, so a bare-infinitive query like "komme"
+# wouldn't otherwise match any row.
+_LEADING_INFINITIVE_RE = re.compile(r"^å\s+", re.IGNORECASE)
+
 
 def _clean(term: str) -> str:
-    return _TRAILING_ANNOTATION_RE.sub("", term).strip()
+    term = _TRAILING_ANNOTATION_RE.sub("", term).strip()
+    return _LEADING_INFINITIVE_RE.sub("", term).strip()
 
 
 def _rows(path: str):

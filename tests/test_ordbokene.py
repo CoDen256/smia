@@ -15,4 +15,4 @@ def test_live_pronunciation_lookup():
         result = OrdbokeneAdapter().lookup({"text": "sjanger", "lang": "nb"})
     except ProviderLookupError:
         pytest.skip("ord.uib.no not reachable")
-    assert any(c["phonetic"] for c in result["candidates"])
+    assert any(c["ipa"] for c in result["candidates"])

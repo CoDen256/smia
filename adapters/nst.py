@@ -5,9 +5,10 @@ can be multi-valued — here, one candidate per dialect variety that has an
 entry for the word, all under the single `nst` provider name, not five
 separate provider names).
 
-`phonemic` carries the standard (Eastern-formal) lexicon's transcription;
-each dialect-area/register variant is its own candidate with `phonetic` set
-and `variety` naming the area+register (e.g. `southwestern_spoken`).
+Every candidate carries its transcription under `ipa` (the one `/ipa`
+field name every provider uses); `variety` distinguishes the standard
+(Eastern-formal) lexicon's entry (`variety: "standard"`) from each
+dialect-area/register variant (e.g. `southwestern_spoken`).
 """
 
 from __future__ import annotations
@@ -32,7 +33,7 @@ class NstAdapter:
                 text("SELECT DISTINCT ipa FROM nst_lexicon WHERE wordform = :word"), {"word": word}
             ).all()
             for (ipa,) in standard_rows:
-                candidates.append({"phonemic": ipa, "variety": "standard"})
+                candidates.append({"ipa": ipa, "variety": "standard"})
 
             dialect_rows = db.execute(
                 text(
@@ -41,7 +42,7 @@ class NstAdapter:
                 {"word": word},
             ).all()
             for area, register, ipa in dialect_rows:
-                candidates.append({"phonetic": ipa, "variety": f"{area}_{register}"})
+                candidates.append({"ipa": ipa, "variety": f"{area}_{register}"})
 
         return {"candidates": candidates}
 

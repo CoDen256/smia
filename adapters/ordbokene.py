@@ -6,9 +6,9 @@ the University of Bergen's ordbokene.no API (task 4.4), reading
 Note: `pronunciation` entries are ordbokene's own stress-marked respelling
 notation (e.g. `sjanˊger`, `jip(p)`), not IPA — there is no official
 ordbokene->IPA conversion table (unlike NST's NOFABET table). Surfaced
-under `phonetic` as-is; this is the one `/ipa` provider that doesn't
-produce real IPA symbols, a limitation inherited from the source, not
-introduced here.
+under `ipa` as-is anyway (the one field name every `/ipa` provider uses);
+this is the one `/ipa` provider whose `ipa` field doesn't contain real IPA
+symbols, a limitation inherited from the source, not introduced here.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ class OrdbokeneAdapter:
                 for p in pronunciations:
                     content = p.get("content")
                     if content:
-                        candidates.append({"phonetic": content})
+                        candidates.append({"ipa": content})
         except requests.RequestException as exc:
             raise ProviderLookupError(f"ordbokene.no request failed: {exc}") from exc
 

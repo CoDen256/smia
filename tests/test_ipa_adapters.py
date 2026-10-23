@@ -26,19 +26,19 @@ def test_nst_unknown_word_is_empty():
     assert result == {"candidates": []}
 
 
-def test_kaikki_ipa_candidate_has_phonemic():
+def test_kaikki_ipa_candidate_has_ipa():
     result = KaikkiIpaAdapter().lookup({"text": "fable", "lang": "nb"})
     assert result["candidates"]
-    assert result["candidates"][0]["phonemic"] == "/fɑːblə/"
+    assert result["candidates"][0]["ipa"] == "/fɑːblə/"
 
 
 def test_ipadict_thin_lookup():
     result = IpaDictAdapter().lookup({"text": "abort", "lang": "nb"})
-    assert result["candidates"] == [{"phonemic": "ɑˈbɔʈ"}]
+    assert result["candidates"] == [{"ipa": "ɑˈbɔʈ"}]
 
 
 def test_wikipron_multiple_candidates():
     result = WikipronAdapter().lookup({"text": "A", "lang": "nb"})
-    phonemics = {c["phonemic"] for c in result["candidates"]}
-    assert "a" in phonemics
-    assert "ɑː" in phonemics
+    ipas = {c["ipa"] for c in result["candidates"]}
+    assert "a" in ipas
+    assert "ɑː" in ipas
