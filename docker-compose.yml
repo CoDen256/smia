@@ -40,6 +40,25 @@ services:
       - ./providers:/app/providers:ro
     ports:
       - "5055:5055"
+    networks:
+      # default: this project's own network, unchanged.
+      # tun-shared: lets stabbur's backend reach this container for the
+      # smia-enrichment-panel proxy (SMIA_BASE_URL). Aliased to
+      # "smia-backend" rather than this service's own name ("backend") —
+      # stabbur's own backend service is *also* named "backend", and the
+      # two would collide on the shared network otherwise (the same
+      # per-project-name collision stabbur's D94 renamed its postgres
+      # service to avoid). One-time setup: `docker network create
+      # tun-shared` before bringing any of these stacks up.
+      default: {}
+      tun-shared:
+        aliases:
+          - smia-backend
+
+networks:
+  default: {}
+  tun-shared:
+    external: true
 
 volumes:
   smia-pg-data:
