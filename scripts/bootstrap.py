@@ -42,7 +42,14 @@ def _find_dictcc_static_args() -> list[str]:
     args = []
     for path in sorted(glob.glob("providers/dict/*.txt")):
         with open(path, encoding="utf-8") as f:
-            header = f.readline().strip()
+            first_line = f.readline().strip()
+        # The real dump's first line is itself two tab-separated columns
+        # ("# NO-EN vocabulary database\tcompiled by dict.cc"), not the bare
+        # key alone — an exact-equality match against the whole line never
+        # matched any real file (confirmed: only ever silently masked by an
+        # already-populated table skipping this check entirely on every
+        # prior run; a genuinely empty database hits this for real).
+        header = first_line.split("\t", 1)[0]
         pair = _DICTCC_PAIR_HEADERS.get(header)
         if pair:
             args += [path, pair]
