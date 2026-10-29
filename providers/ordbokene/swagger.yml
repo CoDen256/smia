@@ -1,0 +1,125 @@
+openapi: 3.0.1
+info:
+  title: Ordbok API
+  description: This API is developed by the University of Bergen. Its purpose is to serve the new national dictionary website wich is under development. No warranty.
+  version: 1.0.0
+servers:
+  - url: https://ord.uib.no
+paths:
+  /api/suggest:
+    get:
+      summary: Autocomplete
+      description: Suggests search keywords.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: The search string
+          schema:
+            type: string
+          example: test
+        - name: dict
+          in: query
+          required: true
+          description: Dictionary code, 'bm' for bokmål, 'nn' for nynorsk, 'bm,nn' for both
+          schema:
+            type: string
+          example: bm,nn
+        - name: wc
+          in: query
+          description: "Filter by word class (part of speech tags: https://universaldependencies.org/u/pos/index.html). "
+          schema:
+            type: string
+          example: NOUN
+        - name: n
+          in: query
+          description: Number of results to return
+          schema:
+            type: integer
+          example: 4
+        - name: include
+          in: query
+          description: "Choose what types of suggestions you want to be included in the response. The parameter should be a concatenation of any of the following characters: e (exact lemma), f (full-text search), i (inflected forms), s (similar - fuzzy search)"
+          schema:
+            type: string
+          example: eis
+        - name: dform
+          in: query
+          description: "dfomr=int turns dictionary codes in the response into integers: 1 = bm, 2 = nn and 3 = bm,nn"
+          schema:
+            type: string
+          example: int
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/articles:
+    get:
+      summary: Article search
+      description: Search for articles. Returns lists of article IDs.
+      parameters:
+        - name: w
+          in: query
+          required: true
+          description: Word (Query string)
+          schema:
+            type: string
+          example: test
+        - name: dict
+          in: query
+          required: true
+          description: Dictionary code, 'bm' for bokmål, 'nn' for nynorsk, 'bm,nn' for both
+          schema:
+            type: string
+          example: bm,nn
+        - name: wc
+          in: query
+          description: "Filter by word class (part of speech tags: https://universaldependencies.org/u/pos/index.html). "
+          schema:
+            type: string
+          example: NOUN
+        - name: scope
+          in: query
+          description: "Define the scope of your query. The parameter should be a concatenation of any of the following characters: e (exact lemma), f (full-text search), i (inflected forms)"
+          schema:
+            type: string
+          example: eif
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /{dict}/article/{article_id}.json:
+    get:
+      summary: Article lookup
+      description: Returns an article with a specific numeric ID
+      parameters:
+        - name: dict
+          in: path
+          required: true
+          description: Dictionary code, 'bm' for bokmål, 'nn' for nynorsk, 'bm,nn' for both
+          schema:
+            type: string
+          example: bm
+        - name: article_id
+          in: path
+          required: true
+          description: The numeric ID of an article
+          schema:
+            type: integer
+          example: 54131
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object

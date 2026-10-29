@@ -1,0 +1,527 @@
+﻿%KODER ARGUMENTSTRUKTUR 
+
+%% Revidert av Eli Sætherø Andenes 
+%% Første revisjon 05.11.97 (Innsetting av VARIABEL i relevante koder, %%spesifisering av preposisjon i ditrans4, tillegg av koder: trans14, refl11, predik5 %%(udefinert)). 
+%% Revisjon 11.11.97: tillegg av kode trans15 (SU:TH, OBJ:s1, ellers som trans2).
+%% Revisjon t.o.m 05.01.98: Tillegg av koder: trans15-19, refl12-14,predik6,part5.
+%% Revisjon 06.01.98: definisjon av tidligere uferdige koder: trans13, ditrans6, 
+%% Revisjon 13.03.98: tillegg koder: trans20-21,ditrans7-8, ferdig definnert: %%refl3,13,14,part3
+%%Revisjon>>08.04.1998: endret innhold trans15 (tidl.bruk: nå trans18). Tillegg: %%trans 22, 23.
+%% Endringer lagt inn t.o.m. 24.04.98: lagt til ditrans9,refl15-20,predik8-13,part6-7,adv13-17,kaus.
+%% Revidert sept 99 av TN
+
+:- op(500,xfy,::).  
+:- op(510,fy,--).
+
+arg_code(nullv,[arg1:su::norole::np]).
+% Eks: det snør, det buldrer, det klarner
+%Brukes ved ekte nullverdige verb som f. eks. meteorologiske verb.
+%Bodil 05.02.97
+
+arg_code(nullv1,[arg1:su::norole::np,arg2:adv::loc::pp]).
+% Eks: det kvakk i henne, kneste, knette, knyste
+%Lite brukt.
+%Bodil 04.03.97 
+
+arg_code(nullv2,[arg1:su::norole::np,arg2:adv::exp::pp:[kjerne=VAR]]).
+% Eks: det rabler for ham
+% Lite brukt.
+%TN 20.09.99 
+
+arg_code(intrans1,[arg1:su::ag::np]).
+% Eks: studentene tenker, kjempe, kjefte, kvile, kannelere, advisere
+%(Trekket --cogn er fjernet i alle intrans-koder.)
+%Bodil endret 01.10.97
+
+arg_code(intrans2,[arg1:su::th::np,--passiv]).
+% Eks: brevet ankom, mannen kom, kvitne, kumulere
+%Bodil endret 01.10.97
+
+arg_code(intrans3,[arg1:su::exp::np,--passiv]).
+% Eks: gutten fryser,  kaldsvette, klø
+%Dersom subjektet forholder seg likegyldig, er det bedre med "theme".
+%Bodil endret 01.10.97
+
+arg_code(intrans4,[arg1:su::resip::np]).
+% Eks: studentene kives, kjekle, krangle
+%Denne typen krever flertallssubjekt.
+%Bodil endret 08.10.97
+
+arg_code(hv1,[arg1:su::ag::np,arg2:obj::th::hv_setn]).
+% Eks: De diskuterer hva som skal gjøres.  si, 
+%hv_setn = finitt hv-setning
+%TN 050999
+
+arg_code(hv2,[arg1:su::th::np,arg2:obj::th::hv_setn]).
+% Eks: Han vet hva som skjedde.  vite, høre
+%hv_setn = finitt hv-setning
+%TN 050999
+
+arg_code(hv3,[arg1:su::th::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::hv_setn]).
+% Eks: Han lurer på hva som skal skje
+%hv_setn = finitt hv-setning
+%TN 080999
+
+arg_code(trans1,[arg1:su::ag::np,arg2:obj::th::np]).
+% Eks: mannen kjører en bil, mannen kjøpte en bil, mannen synger en sang
+%Bodil 05.02.97
+
+arg_code(trans2,[arg1:su::ag::np,arg2:obj::th::s1]).
+% Eks: mannen sa at han ville komme, manne kunngjorde at han ville komme,
+%s1 = finitt leddsetning
+%Bodil 05.02.97
+%% eksempel som:mannen visste at han ville komme tidligere kodet her, nå under ny %% kode: trans18 (SU:TH).
+%% Eli 11.11.97
+
+arg_code(trans3,[arg1:su::ag::np,arg2:obj::th::inf,arg2:obj:su=arg1:su]).
+% Eks: mannen prøvde å komme, mannen valgte å komme
+%inf = infinitivskonstruksjon med infinitivsmerke
+%subjektskontroll
+%Bodil 05.02.97
+
+arg_code(trans4,[arg1:su::ag::np,arg2:obj::th::smcl]).
+% Eks: mannen observerte dem komme, mannen ba dem komme, mannen lot dem komme
+%smcl =  verbal småsetn.
+%Skal vi ha en annen kode for sanseverb enn for "be" og "la"?
+%Bodil 07.04.97, 
+%% Koden er (for?) lite brukt. Eli 13.03.98
+
+arg_code(trans5,[arg1:su::th::np,arg2:obj::th::np]).
+% Eks: svampen absorberer vann, foranledige, falme, fordunkle
+% TN: To argumenter med samme kode!
+%Bodil 17.02.97
+
+arg_code(trans6,[arg1:su::th::np,arg2:obj::th::np,--passiv]).
+% Eks: saken gjelder gutten, gjennomstrømme, mangle, vite, angå
+%Bodil 07.04.97 
+
+arg_code(trans7,[arg1:su::th::np,arg2:obj::exp::np]).
+% Eks: saken irriterer gutten, bekymre, berolige, beruse
+%Bodil 19.02.97
+
+arg_code(trans8,[arg1:su::exp::np,arg2:obj::th::np]).
+% Eks: mannen liker jenta, fordra, foretrekke, oppleve, persipere
+%Bodil 19.02.97
+
+arg_code(trans9,[arg1:su::ag::np,arg2:obj::result::np]).
+% Eks: mannen bygger hus, bake, (be)bygge, konstruere
+%Er antagelig ikke brukt ofte nok.
+%Bodil 01.04.97
+
+arg_code(trans10,[arg1:su::ag::np,arg2:obj::exp::np]).
+% Eks: mannen gleder gutten, plage, fornøye, fornærme, forferde, forbause
+%Bodil 08.04.97
+
+arg_code(trans11,[arg1:su::ag::np,arg2:obj::th::pp:[kjerne=VAR]]).
+% Eks: han kjefter på barnet, stole på, angre på, andra om, abonnere på
+%% Eli 05.11.97 (tillegg: VAR).
+
+arg_code(trans12,[arg1:su::th::np,arg2:obj::th::pp:[kjerne=VAR]]).
+% Eks: resultatet avhenger av hennes forskning, resultere, ætte
+%% Eli 05.11.97 (tillegg: VAR).
+
+arg_code(trans13,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::inf,arg3:obj:su=arg1:su]).
+% Eks: han ber om å..., avstå fra å.. (Subjektskontroll).
+%Bodil 08.04.97
+%% Eli 05.11.97 (tillegg:VAR)
+%% Eli 06.01.98 (def.av pp/ infinitivsledd). 
+
+arg_code(trans14,[arg1:su::rec::np,arg2:obj::th::np]).
+%  Eks: arve, motta, få,...
+%% Eli 05.11.97
+
+arg_code(trans15,[arg1:su::exp::np,arg2:obj::th::pp:[kjerne=VAR]]).
+%  Eks: lengte etter..., fyse etter.., føle for.., hungre etter.... 
+%% Eli 08.04.97
+
+arg_code(trans16,[arg1:su::exp::np,arg2:obj::th::s1]).
+%  Eks: hate,like at.......
+%Eli 05.01.98
+
+arg_code(trans17,[arg1:su::exp::np,arg2:obj::th::inf,arg2:obj:su=arg1:su]).
+%  Eks: hate,like,elske,avsky å......
+%Eli 05.01.98
+
+arg_code(trans18,[arg1:su::th::np,arg2:obj::th::s1]).
+%  Eks: mannen erfarte/ enset at......., også mannen visste at han ville komme (tidligere under trans2).
+% s1 = finitt leddsetning
+%% Eli 11.11.97
+% tro,oppleve at.....
+%Eli 05.01.98
+%'oppleve', også SU:EXP (oppleve glede vs. oppleve at våren kommer"). 
+
+arg_code(trans19,[arg1:su::th::np,arg2:obj::th::inf,arg2:obj:su=arg1:su]).
+%  Eks: ønske,oppleve å.....
+%Eli 05.01.98
+
+arg_code(trans20,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::s1]).
+%  Eks: true med at... 
+% Eli 13.03.98
+
+arg_code(trans21,[arg1:su::th::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::s1]).
+%  Eks: tvile på at..., håpe på at... 
+% Eli 13.03.98
+
+arg_code(trans22,[arg1:su::th::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::inf,arg3:obj:su=arg1:su]).
+%  Eks: avhenge av å..
+% som trans21, men arg3=inf.
+% Eli 01.01.98
+
+arg_code(trans23,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::inf,arg3:obj:su=arg1:su]).
+%  Eks: bytte på å...
+%som trans22, men SU=AG.
+% Eli 01.01.98
+
+arg_code(scomp1,[arg1:su::norole::np,arg2:io::exp::np:,arg3:obj::th::s1]).
+%  Eks: Det aner/forbauser/irriterer meg at ... 
+% TN 26.05.99
+
+arg_code(ditrans1,[arg1:su::ag::np,arg2:io::rec::np,arg3:obj::th::np]).
+% Eks: mannen ga jenta en blomst, mannen forærte jenta en sykkel
+%Bodil 05.02.97
+
+arg_code(ditrans2,[arg1:su::ag::np,arg2:io::rec::np,arg3:obj::th::s1]).
+% Eks: mannen lovte jenta at hun skulle få en blomst
+%Bodil 20.02.97
+
+arg_code(ditrans3,[arg1:su::ag::np,arg2:io::rec::np,arg3:obj::th::inf,arg3:obj:su=arg1:su]).
+% Eks: mannen lovte jenta å sende henne en blomst
+%subjektskontroll
+%Bodil 20.02.97
+
+arg_code(ditrans4,[arg1:su::ag::np,arg2:obj::th::np,arg3:obj::rec::pp:[kjerne=til]]).
+% Eks: jenta ga et eple til frøken
+%% Eli 05.11.97 (spes. kjerne: "til").
+
+arg_code(ditrans5,[arg1:su::ag::np,arg2:obj::th::np,arg3:obj::th::pp:[kjerne=VAR]]).
+% Eks:  jenta byr mannen på kaffe, forsyne noen med,underrette noen om..
+%Bodil 08.10.97
+%% rollen til arg2 er endret fra RECIPIENT til THEME for å kunne brukes mer  %%generelt. Kan muligens splittes opp i flere koder avhengig av roller. Foreløpig %%kodes alle 'ditransitive' konstruksjoner som ikke passer under ditrans4 som %%ditrans5 (dvs. hvor arg3 er en pp med krav om bestemte preposisjoner, også %%tilfeller hvor prep er 'til', men hvor preposisjonsfrasen ikke har rolle REC som i %%ditrans4. Eventuell oppsplitting til flere koder, eller endring av rollespesifikasjonen %%vil gjøres etter en sammenligning av de verb som har fått kode ditrans5 i et antall %%verbfiler. Eli 05.11.97.
+%% En mulighet hvis man ønsker å begrense antall koder, men samtidig kunne dekke %%flest mulig aktuelle konstruksjoner (ihvertfall i deres 'grovstruktur'), er muligens %%holde rollen uspesifisert i kodedefinisjonen. Eli 05.01.98.
+
+arg_code(ditrans6,[arg1:su::ag::np,arg2:iobj::th::np,arg3:part::norole::pp:[kjerne=VAR],arg4:obj::th::inf,arg4:obj:su=arg2:iobj]).
+% Eks: jenta ansporer mannen til å gjøre sitt beste, be, bevege..
+%Bodil 08.10.97
+%% Eli 05.11.97 (tillegg:VAR)
+%% Her er også rollen til arg2 endret fra RECIPIENT til THEME (jfr. komentarer til %%kode ditrans6. Her virker imidlertid endringen av rolle mindre problematisk, i %%forhold til opplistede eksempel. 
+%% Eli 06.01.98 (def.av pp/ infinitivsledd).
+
+arg_code(ditrans7,[arg1:su::ag::np,arg2:io::rec::np,arg3:obj::th::inf,arg3:obj:su=arg2:io]).
+% Eks: pålegge,  påby noen å....
+% som ditrans3, men objektskontroll.
+% Eli 13.03.97
+
+arg_code(ditrans8,[arg1:su::ag::np,arg2:io::th::np,arg3:obj::result::pp:[kjerne=VAR]]).
+%  Eks: samle landet til ett rike, salve noen til konge....
+% Eli 13.03.98
+
+arg_code(ditrans9,[arg1:su::rec::np,arg2:obj::th::np,arg3:X::source::pp:[kjerne=VAR]]).
+% Eks: arve/motta/få noe fra noen..
+%Recipient subjekt+ source pp.
+% Eli 30.03.98.
+
+arg_code(refl1,[arg1:su::exp::np,arg2:obj::unspec::np:[kjerne=seg],--passiv]).
+% Eks: gutten skammer seg, gremme, sjenere, grue
+%Kan ikke erstattes av en annen np. Her skal "seg" leses som hele %bøyningsparadigmet til "seg" (tall og person). Gjelder også andre refl-koder.
+%Bodil 19.02.97
+
+arg_code(refl2,[arg1:su::resip::np,arg2:obj::unspec::np:[kjerne=seg],--passiv]).
+% Eks: de samrår seg, sammensverge, forlove
+%Disse to verbene er kodet refl2,refl9. Andre verb av samme type har koden refl9 da %jeg ikke har rukket å se nærmere på behovet for koden.
+%Kan lage passiv?
+%Bodil 08.10.97
+%% Rollen til arg1 endret fra AG til RESIP, i følge eksempel (koden ellers lik refl4).
+%% Eli 05.11.97 
+
+arg_code(refl3,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:part::norole::pp:[kjerne=VAR],arg4:obj::th::inf,arg4:obj:su=arg1:su,--passiv]).
+% Eks: han nedlater seg til å..., nedverdige, nøye
+%Denne kodens arg3 er ikke ferdig definert (mangler pp), og koden er derfor %identisk med refl8. MÅ GJØRES FERDIG. 
+%Bodil 08.10.97
+%% Eli 05.11.97 (tillegg:VAR (PP)) Infinitivsfrase må tillegges definisjonen (i PP ?). 
+%% Eli 13.03.98 Tillegg av inf.frase/ def av pp. 
+
+arg_code(refl4,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],--passiv]).
+% Eks: gutten bøyer seg, ombestemme, okke
+%Man vil finne en viss sammenheng mellom denne og trans1.
+%Bodil 20.03.97
+
+arg_code(refl5,[arg1:su::th::np,arg2:obj::unspec::np:[kjerne=seg],--passiv]).
+% Eks: blodet kaker seg, greine/grene seg, gryne seg
+%Bodil 20.03.97
+
+arg_code(refl6,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::np,--passiv]).
+% Eks: han bemektiger seg en kake, ikle seg noe, iføre seg noe, fraskrive seg %noe, frasi seg noe
+%Bodil 01.04.97
+
+arg_code(refl7,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::s1,--passiv]).
+% Eks: han kan tenke seg at noe skjer, forestille seg at..
+%Bodil 01.04.97
+
+arg_code(refl8,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::inf,arg3:obj:su=arg1:su,--passiv]).
+% Eks: han kan tenke seg å gjøre noe
+%sjelden
+%Bodil 01.04.97
+
+arg_code(refl9,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::pp:[kjerne=VAR],--passiv]).
+% Eks: han bemøyer seg med arbeidet, han baserer seg på fakta, opphøye seg til
+%Bodil 08.10.97
+%% Eli 05.11.97 (tillegg:VAR)
+
+arg_code(refl10,[arg1:su::th::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::pp:[kjerne=VAR],--passiv]).
+% Eks: summen beløper seg til.., oppskriften baserer seg på frukt
+%Bodil 08.10.97
+%% Eli 05.11.97 (tillegg:VAR)
+
+arg_code(refl11,[ arg1:su::th::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::loc::pp,--passiv]).
+% Eks: avtegne seg på/mot himmelen, avspeile seg i vannet,reflektere..
+%% Eksempler med TH subjekt + refleksiv som er ufullstendige uten en lokativ pp. %%verbbetydningen impliserer at f.eks 'avspeilingen' skjer 'lokativt'. Lokative pp'er %%er forløpig ikke kodet med VAR. 
+%% Eli 05.11.97
+
+arg_code(refl12,[arg1:su::exp::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::pp:[kjerne=VAR],--passiv]).
+% Eks:  hygge seg med....,glede seg over....
+%% Eli 05.01.98
+
+arg_code(refl13,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::unspec::np:[kjerne=seg],--passiv]).
+% Eks:  Kle på seg/av seg, ..
+%% Kan også kalles 'partX', men er forskjellig fra part2 m.h.t ordstilling.
+%% Eli 05.01.98
+%% Eli 13.03.98
+
+arg_code(refl14,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::unspec::np:[kjerne=seg],arg4:obj::th::np,--passiv]).
+% Eks: Kle på/av seg klær (eller er samme veksling som i part3 mulig???).
+%%lire av seg en tale (?? lire talen av seg..)
+%%Hvis samme veksling i ordstilling er mulig her, faller denne koden sammen med %%part3. 
+%% Eli 05.01.98
+%% Eli 13.03.98
+
+arg_code(refl15,[ arg1:su::su::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::loc::pp,--passiv]).
+% Eks:  som refl11, men AG:SU.
+% begrave seg i arbeid..
+% Eli 30.03.98.
+
+arg_code(refl16,[arg1:su::exp::np,arg2:obj::unspec::np:[kjerne=seg],arg3:part::norole::pp:[kjerne=VAR],arg4:obj::th::s1,--passiv]).
+%  Eks: glede seg over at...
+% som refl12, men obj: s1.
+% Eli  07.04.98.
+
+arg_code(refl17,[arg1:su::exp::np,arg2:obj::unspec::np:[kjerne=seg],arg3:part::norole::pp:[kjerne=VAR],arg4:obj::th::inf,--passiv]).
+%  Eks: glede seg over å...
+% som refl12, men obj: inf.
+% Eli 07.04.98.
+
+arg_code(refl18,[arg1:su::exp::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::pp:[kjerne=VAR]]).
+%  Eks: som refl12, men passiv mulig.forelske/fortape seg i noe(n)
+% Eli 08.04.98.
+
+arg_code(refl19,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:obj::th::pp:[kjerne=VAR]]).
+% Eks: forlove seg med noen
+% som refl9, +passiv. 
+% Eli 08.04.98.
+
+arg_code(refl20,[arg1:su::th::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::unspec::np:[kjerne=seg],arg4:obj::th::np,--passiv]).
+% Eks: som refl14, men SU:TH. late etter seg noe..
+%" Eli 08.04.98.
+
+arg_code(present1,[arg1:su::norole::np,arg2:obj::th::np,--passiv]).
+% Eks: det kommer en mann
+% Bodil 19.02.97
+
+arg_code(present2,[arg1:su::norole::np,arg2:obj::ag::np,arg3:adv::loc::pp,--passiv]).
+% Eks: %det løper en hund opp bakken, det går en mann på veien
+%Bodil 05.02.97
+
+arg_code(present3,[arg1:su::norole::np,arg2:obj::th::np,arg3:adv::loc::pp,--passiv]).
+% Eks: det sitter en hund på trappa", "det ligger en mann på senga"
+%Bodil 05.02.97
+
+arg_code(predik1,[arg1:su::th::np,arg2:spred::unspec::np]).
+% Eks: være, bli, hete, kalles, agere
+%Bodil 05.02.97
+
+arg_code(predik2,[arg1:su::th::np,arg2:spred::unspec::ap]).
+% Eks: være, bli, synes, virke, agere
+%Bodil 05.02.97
+
+arg_code(predik3,[arg1:su::ag::np,arg2:obj::th::np,arg3:opred::unspec::np]).
+% Eks: jenta kaller mannen en tosk
+%Bodil 05.02.97
+
+arg_code(predik4,[arg1:su::ag::np,arg2:obj::th::np,arg3:opred::unspec::pp:[kjerne=VAR]]).
+% Eks: jenta kaller mannen for en forbryter
+%Skal pp spesifiseres på noen måte her?
+%Bodil 05.02.97
+%% Spesifiser prep i koder, eller VAR?!
+%% Eli 05.11.97
+% 20.02.98: Lagt inn VAR.[Legg inn VAR i alle kodede verb!]. 
+
+arg_code(predik5,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:opred::unspec::np]).
+% Eks:  Han benevner/ kaller seg direktør..
+%% Eli 05.11.97
+%% definisjon: 20.02.98.
+
+arg_code(predik6,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:opred::unspec::ap]).
+% Eks:  han kaller seg snill...
+%% som predik5, men s.pred=adj.p
+%% Eli 05.11.97
+%% definisjon: 20.02.98.
+
+arg_code(predik7,[arg1:su::ag::np,arg2:obj::th::np,arg3:opred::unspec::ap]).
+% Eks:  male stolen grønn, vaske bilen ren...
+%% som predik3, men opred=ap.
+%% Eli 05.01.98.
+
+arg_code(predik8,[arg1:su::ag::np,arg2:obj::th::np,arg3:opred::unspec::np:[kjerne=som]]).
+%  Eks: anføre noe som bevis
+% Eli 30.03.98.
+% Kategorien til arg3 er usikker.  TN
+
+arg_code(predik9,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:spred::np:[kjerne=som]]).
+%  Eks: åpenbare seg som...
+% Eli 30.03.98.
+% Kategorien til arg3 er usikker.  TN
+
+arg_code(predik10,[arg1:su::ag::np,arg2:obj::th::np,arg3:part::norole::pp:[kjerne=VAR],arg4:opred::unspec::inf]).
+% Eks: anse noen for å være ...
+% Eli 30.03.98.
+
+arg_code(predik11,[arg1:su::ag::np,arg2:part::unspec::pp:[kjerne=VAR],arg3::spred::unspec::X:[kjerne=som]).
+% Eks: fare frem som en villmann..
+% Eli 30.03.98.
+
+arg_code(predik12,[arg1:su::::np,arg2:spred::unspec::np:[kjerne=som]).
+% Eks: framstå som...
+% Eli 30.03.98.
+
+arg_code(predik13,[arg1:su::ag::np,arg2:spred::unspec::np:[kjerne=som]).
+%  Eks: jobbe som larer..
+% Eli 30.03.98.
+
+arg_code(part1,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::np]).
+%  Eks: han kasserer inn penger/penger inn, 
+%partikkelen er en intransitiv preposisjon som enten står foran eller etter np'en.
+% VAR = et oppslag [inn] eller en liste av oppslag [inn,ut,over], spesifiseres ved %verbet. Det bør sjekkes at dette er gjort på alle oppslag. Gjelder alle part-koder.
+%Bodil 01.04.97
+
+arg_code(part2,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:part::norole::pp:[kjerne=VAR],--passiv]).
+% Eks: ferde seg til, buste seg til, dresse seg opp, dumme seg ut
+%Bodil 28.04.97
+
+arg_code(part3,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::unspec::np:[kjerne=seg],arg4:obj::th::np]).
+% Eks:  gafle i seg noe og gafle noe i seg, jaske fra seg noe, jaske noe fra seg
+%Denne kodens arg2 er ikke ferdig definert (mangler "seg"), og koden er derfor %identisk med part1.. 
+%Bodil 01.10.97
+% Eli 13.03.98 Tillegg "seg"
+
+arg_code(part4,[arg1:su::th::np,arg2:part::norole::pp:[kjerne=VAR]]).
+% Eks: han dabber av, han livner til, smuldre bort, hovne opp
+%Partikkelen er en intransitiv preposisjon.
+%VAR = et oppslag [inn] eller en liste av oppslag [inn,ut,over], spesifiseres ved %verbet.
+%Bodil 07.10.97
+
+arg_code(part5,[arg1:su::ag::np,arg2:part::norole::pp:[kjerne=VAR]]).
+% Eks:  fyre opp, fuse fram, gape opp,..
+%% som part4, men SU:AG.
+%% Eli 06.01.98
+
+arg_code(part6,[arg1:su::rec::np,arg2:part::norole::pp:[kjerne=VAR],arg3:obj::th::np]).
+%  Eks: få tilbake,igjen,fram noe
+% Eli 08.04.98
+
+arg_code(part7,[arg1:su::ag::np,arg2:part::unspec::pp:[kjerne=VAR],arg3:io::rec::np,arg4:obj::th::np]).
+%  Eks: behandle, gasjere, rangere, verdsette, vurdere
+% Eli 08.04.98.
+
+arg_code(adv2,[arg1:su::th::np,arg2:obj::unspec::np:[kjerne=seg],arg3:adv::manner::ap,--passiv]).
+% Eks: saken arter seg slik/merkelig, befinne seg slik, fortone
+%MÅ SJEKKES.
+%Bodil 08.10.97
+
+arg_code(adv3,[arg1:su::ag::np,arg2:adv::path::pp]).
+% Eks: labbe til byen, beine, daffe
+%Bodil 01.10.97
+
+arg_code(adv4,[arg1:su::ag::np,arg2:adv::loc::pp]).
+% Eks: mannen kakker på døra, banke
+%Lite brukt.
+%Se kommentar til adv5.
+%Bodil 18.02.97
+
+arg_code(adv5,[arg1:su::th::np,arg2:adv::loc::pp]).
+% Eks: han bor i byen, foregå
+%Se (16) Troll der den semantiske rollen er åpen for subjektet og frasetypen er %åpen for adverbialet: <X,np,ea>,<loc,Y,adv>. Med Referansegrammatikkens %definisjon av preposisjoner vil det siste være unødvendig. Når det gjelder %subjektets semantiske rolle, definerer vi to koder som dekker de to %mulighetene vi har.
+%Lite brukt.
+%Bodil 18.02.97
+
+arg_code(adv6,[arg1:su::ag::np,arg2:obj::th::np,arg3:adv::loc::pp]).
+%  Eks: sette koppen på bordet, etablere, innhylle
+% Bodil 01.07.97
+%% eventuelt tillegg av VAR
+%% Eli 05.11.97
+
+arg_code(adv7,[arg1:su::ag::np,arg2:obj::th::np,arg3:adv::path::pp]).
+% Eks: kanalisere vannet til.., ferje
+%Bodil 01.07.97
+%% eventuelt tillegg av VAR
+%% Eli 05.11.97
+
+arg_code(adv8,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:adv::path::pp,--passiv]).
+% Eks: gutten albuer seg fram, kare, kreke, kravle
+%Bodil 18.04.97
+
+arg_code(adv9,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:adv::loc::pp,--passiv]).
+% Eks: gutten klamrer seg til.., kile seg inn..
+%Bodil 18.04.97
+%% er bruken av denne koden inkonsistent, eller tillater kodene så storvaiasjon i form? 
+%% Eli 05.01.98.
+
+arg_code(adv10,[arg1:su::ag::np,arg2:obj::rec::np,arg3:obj::th::np,arg4:adv::loc::pp]).
+% Eks: gutten kylte henne en snøball i nakken
+%Bodil 08.10.97
+%% eventuelt tillegg av VAR (??)
+%% Eli 05.11.97
+
+arg_code(adv11,[arg1:su::ag::np,arg2:obj::rec::np,arg4:adv::loc::pp]).
+% Eks: gutten skrubbet henne på ryggen, vafle, klø(?)
+%Bodil 08.10.97
+%% eventuelt tillegg av VAR (??)
+%% Eli 05.11.97
+
+arg_code(adv12,[arg1:su::th::np,arg2:adv::path::pp]).
+%  Eks: slingre nedover veien
+% som adv3, men SU:TH.
+% Eli 13.03.98.
+
+arg_code(adv13,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg],arg3:adv::manner::ap,--passiv]).
+% Eks: gutten greier seg godt..
+% som adv2, men SU:AG.
+% Eli 08.04.98.
+
+arg_code(adv14,[arg1:su::ag::np,arg2:obj::th::np,arg3:adv::manner::ap,--passiv]).
+%  Eks: gasjere noen høyt
+%"manner", uten refl.
+% Eli 08.04.98.
+% Kunne kanskje vært brukt mer?  TN
+
+arg_code(adv15,[arg1:su::th::np,arg2:adv::manner::ap,--passiv]).
+% Eks: kaffen dufter/lukter godt
+% Eli 08.04.98.
+
+arg_code(adv16,[arg1:su::ag::np,arg2:X::manner::X:[kjerne=som],arg3:adv::X::s1]).
+% Eks: mannen later som han er syk
+% Eli 08.04.98.
+
+arg_code(adv17,[arg1:su::ag::np,arg2:X::manner::X,[kjerne=som],arg3:part::norole::pp:[kjerne=VAR],arg4:adv::X::s1]).
+% Eks: mannen later som om han er syk
+% Eli 08.04.98.
+
+arg_code(aux1,[arg1:vcomp::unspec::vp:[verbform=VAR]]).
+%  Eks: bli, burde, få, ha, kunne, monne, måtte, skulle, ville, være
+% Eli 13.03.98
+%inf=infinitivsfrase med inf.merke.
+%infinitiv= infinitivsfrase/verbform uten inf.merke: kunne gjøre noe.
+
+arg_code(kaus1,[arg1:su::ag::np,arg2:obj::th::np,arg3:vcomp::unspec::vp:[verbform=infinitiv],arg3:vcomp:su=arg2:obj]).
+%  Eks: la noe være usagt
+
+arg_code(kaus2,[arg1:su::ag::np,arg2:obj::unspec::np:[kjerne=seg,arg3:vcomp::vp:[verbform=infinitiv]],--passiv]).
+% Eks: la seg lure
