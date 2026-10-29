@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import os
 
 from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -146,7 +147,16 @@ def get_health():
 @app.route("/ui", methods=["GET"])
 @app.route("/ui/", methods=["GET"])
 def ui_index():
-    return send_from_directory("ui", "index.html")
+    # Mounted at the domain root in local dev, but under a path prefix
+    # (e.g. /smia) once reverse-proxied through tun's Caddy — mirrors
+    # stabbur's app.py ui_index() exactly (D46). The proxy passes the
+    # prefix along as X-Forwarded-Prefix; ui/ui.js reads it back via
+    # `window.SMIA_PREFIX` for its own absolute API requests.
+    prefix = request.headers.get("X-Forwarded-Prefix", "").rstrip("/")
+    with open(os.path.join(app.root_path, "ui", "index.html"), encoding="utf-8") as f:
+        html = f.read()
+    html = html.replace("__SMIA_PREFIX__", prefix)
+    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 @app.route("/ui/<path:filename>", methods=["GET"])
@@ -162,7 +172,5 @@ def providers():
 
 
 if __name__ == "__main__":
-    import os as _os
-
-    debug = _os.environ.get("FLASK_DEBUG", "1") == "1"
+    debug = os.environ.get("FLASK_DEBUG", "1") == "1"
     app.run(host="0.0.0.0", port=5055, debug=debug)

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>smia — linguistics service</title>
-  <link rel="stylesheet" href="/ui/ui.css">
+  <link rel="stylesheet" href="__SMIA_PREFIX__/ui/ui.css">
 </head>
 <body>
 
@@ -16,8 +16,8 @@
          tun's reverse proxy wires the real sibling paths. -->
     <a href="/">tun</a>
     <a href="/phonexa/">phonexa</a>
-    <a href="/stabbur/">stabbur</a>
-    <a href="/ui">smia (this page)</a>
+    <a href="/stabbur/ui">stabbur</a>
+    <a href="__SMIA_PREFIX__/ui">smia (this page)</a>
   </nav>
   <label for="tokenInput">Bearer token</label>
   <input id="tokenInput" type="password" placeholder="shared smia token (D-S6)" autocomplete="off">
@@ -79,6 +79,7 @@
 
 </div>
 
-<script src="/ui/ui.js"></script>
+<script>window.SMIA_PREFIX = "__SMIA_PREFIX__";</script>
+<script src="__SMIA_PREFIX__/ui/ui.js"></script>
 </body>
 </html>

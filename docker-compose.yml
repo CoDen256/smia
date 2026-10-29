@@ -1,6 +1,16 @@
+# D118: service names made unique (smia-postgres/smia-backend, not
+# postgres/backend) so tun/compose.yaml's `include:` can merge this file
+# alongside mjolnir's and stabbur's without a service-name collision —
+# mjolnir already has its own "postgres" service, and stabbur already has
+# its own "backend" service; Compose's `include:` silently keeps only the
+# FIRST included file's definition of a colliding service name, dropping
+# every subsequent one with no error (same class of bug D94 already fixed
+# once for stabbur's own postgres service) — this isn't cosmetic, it would
+# mean smia simply never starts under `include:`, with no visible error.
 services:
-  postgres:
+  smia-postgres:
     image: postgres:16
+    container_name: smia-postgres
     environment:
       POSTGRES_USER: smia
       POSTGRES_PASSWORD: smia
@@ -15,13 +25,14 @@ services:
       timeout: 3s
       retries: 20
 
-  backend:
+  smia-backend:
     build: .
+    container_name: smia-backend
     depends_on:
-      postgres:
+      smia-postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg2://smia:smia@postgres:5432/smia
+      DATABASE_URL: postgresql+psycopg2://smia:smia@smia-postgres:5432/smia
       SMIA_AUTH_TOKEN: ${SMIA_AUTH_TOKEN:-changeme}
       FLASK_DEBUG: "0"
       # Provider credentials (D-T2): passed through with empty defaults, not
@@ -36,24 +47,26 @@ services:
       # data (hundreds of MB to ~1GB), not something to COPY into every
       # built image layer. bootstrap.py imports from here once, idempotently
       # (skipped on restart once the named Postgres volume is populated),
-      # and warns-but-doesn't-fail if a given file isn't present.
+      # and warns-but-doesn't-fail if a given file isn't present. MUST exist
+      # on whatever host actually runs this container — it is gitignored,
+      # so a fresh clone has none of it; without it, every data-backed
+      # provider (ordbank, nst, kaikki, wikipron, dict.cc static) simply has
+      # nothing to import and returns empty candidates for every lookup,
+      # same as any other "unknown word" response (not a crash, not an
+      # error — easy to mistake for a code bug instead of missing data).
       - ./providers:/app/providers:ro
     ports:
       - "5055:5055"
     networks:
       # default: this project's own network, unchanged.
       # tun-shared: lets stabbur's backend reach this container for the
-      # smia-enrichment-panel proxy (SMIA_BASE_URL). Aliased to
-      # "smia-backend" rather than this service's own name ("backend") —
-      # stabbur's own backend service is *also* named "backend", and the
-      # two would collide on the shared network otherwise (the same
-      # per-project-name collision stabbur's D94 renamed its postgres
-      # service to avoid). One-time setup: `docker network create
-      # tun-shared` before bringing any of these stacks up.
-      default: {}
-      tun-shared:
-        aliases:
-          - smia-backend
+      # smia-enrichment-panel proxy (SMIA_BASE_URL), and lets mjolnir's
+      # Caddy reach it for the /smia/* UI route (D118). One-time setup:
+      # `docker network create tun-shared` before bringing any of these
+      # stacks up standalone; not needed under tun's `include:` mode either
+      # way per D104 — that one-time step is still required there too.
+      - default
+      - tun-shared
 
 networks:
   default: {}
@@ -61,4 +74,11 @@ networks:
     external: true
 
 volumes:
+  # Explicit `name:` so this is the SAME Docker volume whether brought up
+  # via `cd smia && docker compose up` or through `tun/compose.yaml`'s
+  # `include:` — without it, Compose prefixes the volume name with whatever
+  # project is running, creating two entirely separate volumes and making
+  # every imported provider dataset "disappear" switching entry points
+  # (identical cause to stabbur's own D98 volume-naming fix).
   smia-pg-data:
+    name: smia_smia-pg-data

@@ -2,6 +2,12 @@
 // pattern). The shared bearer token (D-S6) is pasted once and kept in
 // localStorage; this is an operator tool, not an end-user page.
 
+// Empty at the domain root (local dev); the mount prefix (e.g. "/smia")
+// once reverse-proxied — set by app.py's ui_index() templating in
+// index.html from the proxy's X-Forwarded-Prefix header (mirrors
+// stabbur's ui.js exactly, D46).
+const API_BASE = window.SMIA_PREFIX || "";
+
 const TOKEN_KEY = "smia_ui_token";
 
 // One ready-to-send example body per kind, prefilled into the try-it form
@@ -30,8 +36,8 @@ function authHeaders() {
 
 async function refreshAll() {
   const [providersResp, healthResp] = await Promise.all([
-    fetch("/providers", { headers: authHeaders() }),
-    fetch("/health", { headers: authHeaders() }),
+    fetch(`${API_BASE}/providers`, { headers: authHeaders() }),
+    fetch(`${API_BASE}/health`, { headers: authHeaders() }),
   ]);
   const providers = await providersResp.json();
   const healthRows = await healthResp.json();
@@ -181,7 +187,7 @@ async function renderAudioPlayers(data) {
   container.innerHTML = "";
   const candidates = (data.candidates || []).filter((c) => c.sha256);
   for (const candidate of candidates) {
-    const resp = await fetch(`/tts/${candidate.sha256}`, { headers: authHeaders() });
+    const resp = await fetch(`${API_BASE}/tts/${candidate.sha256}`, { headers: authHeaders() });
     if (!resp.ok) continue;
     const blob = await resp.blob();
     const url = URL.createObjectURL(blob);
@@ -221,7 +227,7 @@ async function submitTryIt(event) {
     const lang = document.getElementById("tryAudioLang").value.trim();
     if (lang) form.append("lang", lang);
     // No Content-Type header: the browser sets the multipart boundary.
-    resp = await fetch("/stt", { method: "POST", headers: authHeaders(), body: form });
+    resp = await fetch(`${API_BASE}/stt`, { method: "POST", headers: authHeaders(), body: form });
   } else {
     let body;
     try {
@@ -232,7 +238,7 @@ async function submitTryIt(event) {
     }
     body.provider = provider;
     if (forceRefresh) body.forceRefresh = true;
-    resp = await fetch(`/${kind}`, {
+    resp = await fetch(`${API_BASE}/${kind}`, {
       method: "POST",
       headers: { ...authHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(body),
