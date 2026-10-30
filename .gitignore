@@ -4,32 +4,5 @@ __pycache__/
 .venv/
 node_modules/
 
-# providers/ — raw dumps scripts/bootstrap.py imports from on first boot
-# (D120). Tracked now, but NOT wholesale — only what bootstrap.py's
-# _IMPORTS list actually reads. The rest of what accumulated here while
-# sourcing providers is real bloat, not reference material worth vendoring:
-# 88M, superseded download, unused
-providers/nbno/nor.leksikalsk.verktoy.tar.gz
-# 24M, unused
-providers/nbno/no.leksikon.tar.gz
-# 18M, unused
-providers/nbno/norsk_ordvev_nob_1.1.2.zip
-# 15M, superseded by the 20220201 archive actually imported
-providers/nbno/20191010_norsk_ordbank_nob_2005.tar.gz
-# 158M — over GitHub's 100MB-per-file push limit (origin is on github.com).
-# Still needed by bootstrap.py's nst_lexicon import; place it manually on
-# any host that runs this container, same as before this change.
+research/
 providers/nbno/nb_uttale_leksika.zip
-
-# wikipron/ is an accidental full clone of the upstream repo — its own
-# 234M .git history, source, and tests, none of it data. bootstrap.py's
-# wikipron_entry import reads exactly one TSV (the Norwegian broad-transcription
-# scrape) out of 543 in data/scrape/tsv/; allowlist just that file.
-providers/wikipron/*
-!providers/wikipron/data/
-providers/wikipron/data/*
-!providers/wikipron/data/scrape/
-providers/wikipron/data/scrape/*
-!providers/wikipron/data/scrape/tsv/
-providers/wikipron/data/scrape/tsv/*
-!providers/wikipron/data/scrape/tsv/nob_latn_broad.tsv

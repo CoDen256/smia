@@ -60,14 +60,14 @@ def _find_dictcc_static_args() -> list[str]:
 
 _IMPORTS = [
     ("ordbank_fullform", import_ordbank.run, ["providers/nbno/20220201_norsk_ordbank_nob_2005.tar.gz"]),
-    ("kaikki_entry", import_kaikki.run, ["providers/kaikii/kaikki.org-dictionary-NorwegianBokmål.jsonl"]),
+    ("kaikki_entry", import_kaikki.run, ["providers/kaikii/nb.jsonl"]),
     (
         "nst_lexicon",
         import_nst.run,
         ["providers/nbno/nb_uttale_tillegg.zip", "providers/nbno/nb_uttale_leksika.zip"],
     ),
     ("ipa_dict_entry", import_ipadict.run, ["providers/open-dict/nb.txt"]),
-    ("wikipron_entry", import_wikipron.run, ["providers/wikipron/data/scrape/tsv/nob_latn_broad.tsv"]),
+    ("wikipron_entry", import_wikipron.run, ["providers/wikipron/nob_latn_broad.tsv"]),
     ("dictcc_static_entry", import_dictcc_static.run, _find_dictcc_static_args),
 ]
 
