@@ -84,7 +84,7 @@ _PAIRS = {
 # For /tts and /inflections, which take a single `lang`, not a pair: any
 # confirmed lp/dir that puts `lang` on one side works as a self-lookup.
 _LANG_SELF_LOOKUP = {
-    "nb": ("ENNO", 2),
+    "nb": ("DENO", 2),
     "en": ("ENNO", 1),
     "de": ("DEEN", 1),
 }
