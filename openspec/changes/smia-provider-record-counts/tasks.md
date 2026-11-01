@@ -22,7 +22,7 @@
 
 - [x] 4.1 `ui/ui.js` `renderCatalog`: read the new `counts` field and render each table-backed provider's count next to its name.
 - [x] 4.2 `ui/ui.js`/`ui/ui.css`: grey out (muted styling) any provider row whose count is `0`, while still listing it.
-- [ ] 4.3 Manually verify in a browser: an empty-table provider (e.g. before running its import script) shows greyed with `(0)`, and after running the import, a refresh shows the real count un-greyed. **Not verified in this session — no running Postgres/browser available in this environment.**
+- [ ] 4.3 Manually verify in a browser: an empty-table provider (e.g. before running its import script) shows greyed with `(0)`, and after running the import, a refresh shows the real count un-greyed. **Backend verified (full test suite, 93/93, run against a real throwaway Postgres container) — browser rendering itself not visually checked.**
 
 ## 5. Docs
 
