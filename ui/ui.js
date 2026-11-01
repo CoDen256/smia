@@ -61,8 +61,23 @@ async function refreshAll() {
 
 function renderCatalog(providers) {
   const el = document.getElementById("catalog");
+  const countsByKind = providers.counts || {};
   el.innerHTML = Object.entries(providers)
-    .map(([kind, names]) => `<tr><td>${kind}</td><td>${names.join(", ") || "<span class=muted>none configured</span>"}</td></tr>`)
+    .filter(([kind]) => kind !== "counts")
+    .map(([kind, names]) => {
+      const counts = countsByKind[kind] || {};
+      const cells = names.map((name) => {
+        // Only table-backed providers carry a count (registry.py's `count`
+        // source is opt-in per provider) — live/API/manual-link providers
+        // have no entry here at all and render plainly, same as before.
+        if (!(name in counts)) return name;
+        const count = counts[name];
+        return count === 0
+          ? `<span class="provider-empty" title="configured but not yet imported">${name} (0)</span>`
+          : `${name} (${count})`;
+      });
+      return `<tr><td>${kind}</td><td>${cells.join(", ") || "<span class=muted>none configured</span>"}</td></tr>`;
+    })
     .join("");
 }
 
@@ -99,7 +114,7 @@ function populateTryItSelectors(providers) {
   const firstLoad = !kindSel.dataset.initialized;
   kindSel.dataset.initialized = "1";
 
-  const kinds = Object.keys(providers);
+  const kinds = Object.keys(providers).filter((k) => k !== "counts");
   kindSel.innerHTML = kinds.map((k) => `<option value="${k}">${k}</option>`).join("");
   if (kinds.includes(prevKind)) kindSel.value = prevKind;
 

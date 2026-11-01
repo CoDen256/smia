@@ -19,4 +19,8 @@ class WikipronAdapter:
         return {"candidates": [{"ipa": ipa} for (ipa,) in rows]}
 
 
-registry.register("ipa", "wikipron", WikipronAdapter())
+def _wikipron_count(db) -> int:
+    return db.execute(text("SELECT count(*) FROM wikipron_entry")).scalar()
+
+
+registry.register("ipa", "wikipron", WikipronAdapter(), count=_wikipron_count)

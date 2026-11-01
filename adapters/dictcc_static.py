@@ -80,4 +80,8 @@ class DictccStaticAdapter:
         return {"candidates": candidates}
 
 
-registry.register("translations", "dictcc_static", DictccStaticAdapter())
+def _dictcc_static_count(db) -> int:
+    return db.execute(text("SELECT count(*) FROM dictcc_static_entry")).scalar()
+
+
+registry.register("translations", "dictcc_static", DictccStaticAdapter(), count=_dictcc_static_count)

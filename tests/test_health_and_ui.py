@@ -24,6 +24,19 @@ def test_providers_catalog_lists_registered_adapters(monkeypatch):
     assert "ordbank" in body["inflections"]
 
 
+def test_providers_catalog_reports_counts_for_table_backed_providers_only(monkeypatch):
+    monkeypatch.setenv("SMIA_AUTH_TOKEN", "test-token")
+    resp = _client().get("/providers", headers=AUTH)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    counts = body["counts"]
+    # ordbank (table-backed) reports a count, even if 0 in a fresh test db.
+    assert "ordbank" in counts["inflections"]
+    assert isinstance(counts["inflections"]["ordbank"], int)
+    # dictcc_api (live-call provider, no local table) reports no count.
+    assert "dictcc_api" not in counts.get("translations", {})
+
+
 def test_health_reflects_requests_and_cache_hits(monkeypatch):
     monkeypatch.setenv("SMIA_AUTH_TOKEN", "test-token")
     registry.register("testkind", "only", type("A", (), {"lookup": lambda self, i: {"ok": True}})())

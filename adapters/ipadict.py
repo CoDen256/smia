@@ -19,4 +19,8 @@ class IpaDictAdapter:
         return {"candidates": [{"ipa": ipa} for (ipa,) in rows]}
 
 
-registry.register("ipa", "ipadict", IpaDictAdapter())
+def _ipadict_count(db) -> int:
+    return db.execute(text("SELECT count(*) FROM ipa_dict_entry")).scalar()
+
+
+registry.register("ipa", "ipadict", IpaDictAdapter(), count=_ipadict_count)

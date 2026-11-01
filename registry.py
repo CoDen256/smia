@@ -37,18 +37,28 @@ class ProviderRegistry:
     def __init__(self):
         self._adapters: dict[str, dict[str, object]] = {}
         self._available: dict[tuple[str, str], object] = {}
+        self._count: dict[tuple[str, str], object] = {}
 
-    def register(self, kind: str, name: str, adapter, *, available=None) -> None:
+    def register(self, kind: str, name: str, adapter, *, available=None, count=None) -> None:
         """`available`, if given, is a zero-arg callable re-checked on every
         listing/resolution (not just at import time) — e.g. `lambda:
         bool(os.environ.get("X_TOKEN"))` — so a provider whose required
         credential isn't configured is dynamically excluded from
         `providers_for`/`resolve_provider` without needing a code change or
         restart once the token is set. Omit for providers with no such
-        precondition (always available)."""
+        precondition (always available).
+
+        `count`, if given, is a `(db) -> int` callable re-run on every
+        `/providers` call (not cached) — for a provider whose answers come
+        from a local, importable table, this reports how many rows currently
+        back it, so a configured-but-not-yet-imported provider is
+        distinguishable from a populated one. Omit for providers with no
+        meaningful record count (live API calls, manual-link adapters)."""
         self._adapters.setdefault(kind, {})[name] = adapter
         if available is not None:
             self._available[(kind, name)] = available
+        if count is not None:
+            self._count[(kind, name)] = count
 
     def providers_for(self, kind: str) -> list[str]:
         return sorted(
@@ -59,6 +69,16 @@ class ProviderRegistry:
 
     def adapter_for(self, kind: str, name: str):
         return self._adapters.get(kind, {})[name]
+
+    def counts_for(self, db, kind: str) -> dict[str, int]:
+        """Record counts for the providers of `kind` that registered a
+        `count` source, keyed by provider name. Omits any provider with no
+        such source — callers treat absence as "no count applies", not 0."""
+        return {
+            name: fn(db)
+            for (k, name), fn in self._count.items()
+            if k == kind
+        }
 
     def resolve_provider(self, kind: str, requested: str | None) -> str:
         """Implements the lookup-cache 'exactly one provider per request' rule:

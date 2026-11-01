@@ -12,6 +12,7 @@ from __future__ import annotations
 import requests
 from sqlalchemy import text
 
+from adapters.kaikki import kaikki_entry_count
 from audio_cache import store
 from cache import ProviderLookupError
 from db.session import session_scope
@@ -49,4 +50,4 @@ class KaikkiTtsAdapter:
         return {"candidates": candidates}
 
 
-registry.register("tts", "kaikki", KaikkiTtsAdapter())
+registry.register("tts", "kaikki", KaikkiTtsAdapter(), count=kaikki_entry_count)

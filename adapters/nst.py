@@ -47,4 +47,8 @@ class NstAdapter:
         return {"candidates": candidates}
 
 
-registry.register("ipa", "nst", NstAdapter())
+def _nst_count(db) -> int:
+    return db.execute(text("SELECT count(*) FROM nst_lexicon")).scalar()
+
+
+registry.register("ipa", "nst", NstAdapter(), count=_nst_count)

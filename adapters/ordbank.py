@@ -172,4 +172,8 @@ class OrdbankAdapter:
         return {"lemma": grunnform, "pos": pos, "paradigm": paradigm}
 
 
-registry.register("inflections", "ordbank", OrdbankAdapter())
+def _ordbank_count(db) -> int:
+    return db.execute(text("SELECT count(*) FROM ordbank_fullform")).scalar()
+
+
+registry.register("inflections", "ordbank", OrdbankAdapter(), count=_ordbank_count)

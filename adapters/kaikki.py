@@ -148,4 +148,11 @@ class KaikkiAdapter:
         return {"candidates": candidates}
 
 
-registry.register("inflections", "kaikki", KaikkiAdapter())
+def kaikki_entry_count(db) -> int:
+    """Shared record-count source for all three `kaikki` adapters
+    (inflections/ipa/tts) — they all read the one imported `kaikki_entry`
+    table (D-S4), so one count applies to all three registrations."""
+    return db.execute(text("SELECT count(*) FROM kaikki_entry")).scalar()
+
+
+registry.register("inflections", "kaikki", KaikkiAdapter(), count=kaikki_entry_count)

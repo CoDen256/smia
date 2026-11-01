@@ -166,9 +166,14 @@ def ui_asset(filename):
 
 @app.route("/providers", methods=["GET"])
 def providers():
+    from db.session import session_scope
     from registry import KINDS, registry
 
-    return jsonify({kind: registry.providers_for(kind) for kind in KINDS})
+    with session_scope() as db:
+        counts = {kind: registry.counts_for(db, kind) for kind in KINDS}
+    body = {kind: registry.providers_for(kind) for kind in KINDS}
+    body["counts"] = {kind: c for kind, c in counts.items() if c}
+    return jsonify(body)
 
 
 if __name__ == "__main__":

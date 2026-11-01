@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from sqlalchemy import text
 
+from adapters.kaikki import kaikki_entry_count
 from db.session import session_scope
 from registry import registry
 
@@ -43,4 +44,4 @@ class KaikkiIpaAdapter:
         return {"candidates": candidates}
 
 
-registry.register("ipa", "kaikki", KaikkiIpaAdapter())
+registry.register("ipa", "kaikki", KaikkiIpaAdapter(), count=kaikki_entry_count)

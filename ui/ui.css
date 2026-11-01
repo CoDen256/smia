@@ -21,6 +21,8 @@ nav a {
 }
 nav a:hover { color:var(--accent); border-color:var(--accent); }
 
+.provider-empty { color:var(--muted); }
+
 .page { max-width:1100px; margin:0 auto; display:flex; flex-direction:column; gap:20px; }
 section {
   background:var(--surface); border:1px solid var(--border);
