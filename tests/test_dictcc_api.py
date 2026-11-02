@@ -8,6 +8,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from adapters.dictcc_api import (
     DictccApiInflectAdapter,
@@ -15,6 +16,7 @@ from adapters.dictcc_api import (
     DictccApiTtsAdapter,
     UnsupportedPairError,
 )
+from cache import ProviderLookupError
 
 # Captured from providers/dict/api.md's own documented example.
 _KALV_RESPONSE = {
@@ -225,9 +227,65 @@ def test_inflect_unsupported_language_raises():
         DictccApiInflectAdapter().lookup({"word": "chat", "lang": "fr"})
 
 
-def test_tts_two_step_flow_human_and_synthetic(monkeypatch):
-    translations_resp = _mock_response(_KALV_RESPONSE)
+def test_inflect_nb_merges_both_norwegian_pairs(monkeypatch):
+    # "kalv" has no table under DENO here but does under ENNO — a word only
+    # in dict.cc's NO<->EN data, not its NO<->DE data (dictcc-norwegian-
+    # multi-pair). The merged result still finds it.
+    seen_lps = []
 
+    def fake_get(url, params=None, headers=None, timeout=None):
+        seen_lps.append(params["lp"])
+        return _mock_response(_NO_TABLE_RESPONSE if params["lp"] == "DENO" else _KALV_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiInflectAdapter().lookup({"word": "kalv", "lang": "nb"})
+
+    assert sorted(seen_lps) == ["DENO", "ENNO"]
+    assert result["candidates"] == [{
+        "lemma": "kalv", "pos": "substantiv",
+        "paradigm": {"article": "en", "sg_indef": "kalv", "sg_def": "kalven", "pl_indef": "kalver", "pl_def": "kalvene"},
+    }]
+
+
+def test_inflect_nb_one_pair_fails_other_succeeds(monkeypatch):
+    def fake_get(url, params=None, headers=None, timeout=None):
+        if params["lp"] == "DENO":
+            raise requests.RequestException("boom")
+        return _mock_response(_KALV_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiInflectAdapter().lookup({"word": "kalv", "lang": "nb"})
+
+    assert len(result["candidates"]) == 1
+
+
+def test_inflect_nb_both_pairs_fail_raises(monkeypatch):
+    def fake_get(url, params=None, headers=None, timeout=None):
+        raise requests.RequestException("boom")
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        with pytest.raises(ProviderLookupError):
+            DictccApiInflectAdapter().lookup({"word": "kalv", "lang": "nb"})
+
+
+def test_inflect_en_de_still_query_exactly_one_pair(monkeypatch):
+    calls = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        calls.append(params["lp"])
+        return _mock_response(_HAUS_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        DictccApiInflectAdapter().lookup({"word": "Haus", "lang": "de"})
+    assert calls == ["DEEN"]
+
+
+def test_tts_two_step_flow_human_and_synthetic(monkeypatch):
+    # nb queries both DENO and ENNO pairs (dictcc-norwegian-multi-pair) —
+    # both resolve to the same translations/audio data here (byte-identical
+    # per audio type), so this also exercises dedup: 4 audio fetches happen
+    # (human+synthetic x2 pairs) but only 2 distinct candidates survive.
+    translations_resp = _mock_response(_KALV_RESPONSE)
     audio_calls = []
 
     def fake_get(url, params=None, headers=None, timeout=None):
@@ -237,18 +295,19 @@ def test_tts_two_step_flow_human_and_synthetic(monkeypatch):
         resp = MagicMock()
         resp.raise_for_status = MagicMock()
         resp.headers = {"Content-Type": "audio/mpeg"}
-        resp.content = b"fake-mp3-bytes-%d" % len(audio_calls)
+        resp.content = b"fake-mp3-human" if "_rec_ip" in params["lang"] else b"fake-mp3-synthetic"
         return resp
 
     with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
         result = DictccApiTtsAdapter().lookup({"text": "kalv", "lang": "nb"})
 
+    assert len(audio_calls) == 4  # 2 pairs x (human + synthetic)
     assert len(result["candidates"]) == 2
     sources = {c["source"] for c in result["candidates"]}
     assert sources == {"human", "synthetic"}
     synthetic = next(c for c in result["candidates"] if c["source"] == "synthetic")
     assert synthetic["voice"] == "Liv"
-    # both audio calls were keyed by the translation entry's id
+    # all audio calls were keyed by the translation entry's id
     assert all(p["id"] == 528676 for p in audio_calls)
 
 
@@ -272,3 +331,66 @@ def test_tts_skips_synthetic_voice_for_unconfirmed_language(monkeypatch):
 def test_tts_unsupported_language_raises():
     with pytest.raises(UnsupportedPairError):
         DictccApiTtsAdapter().lookup({"text": "chat", "lang": "fr"})
+
+
+def test_tts_nb_merges_both_norwegian_pairs(monkeypatch):
+    # DENO has no translation entry at all for this word; ENNO does — the
+    # merged result still finds its audio.
+    def fake_get(url, params=None, headers=None, timeout=None):
+        if "app_translations" in url:
+            return _mock_response(_NO_TABLE_RESPONSE if params["lp"] == "DENO" else _KALV_RESPONSE)
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.headers = {"Content-Type": "audio/mpeg"}
+        resp.content = b"fake-mp3-bytes"
+        return resp
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiTtsAdapter().lookup({"text": "kalv", "lang": "nb"})
+
+    assert len(result["candidates"]) > 0
+
+
+def test_tts_nb_one_pair_fails_other_succeeds(monkeypatch):
+    def fake_get(url, params=None, headers=None, timeout=None):
+        if "app_translations" in url:
+            if params["lp"] == "DENO":
+                raise requests.RequestException("boom")
+            return _mock_response(_KALV_RESPONSE)
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.headers = {"Content-Type": "audio/mpeg"}
+        resp.content = b"fake-mp3-bytes"
+        return resp
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiTtsAdapter().lookup({"text": "kalv", "lang": "nb"})
+
+    assert len(result["candidates"]) > 0
+
+
+def test_tts_nb_both_pairs_fail_raises(monkeypatch):
+    def fake_get(url, params=None, headers=None, timeout=None):
+        raise requests.RequestException("boom")
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        with pytest.raises(ProviderLookupError):
+            DictccApiTtsAdapter().lookup({"text": "kalv", "lang": "nb"})
+
+
+def test_tts_en_de_still_query_exactly_one_pair(monkeypatch):
+    calls = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        if "app_translations" in url:
+            calls.append(params["lp"])
+            return _mock_response(_HAUS_RESPONSE)
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.headers = {"Content-Type": "audio/mpeg"}
+        resp.content = b"fake-mp3-bytes"
+        return resp
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        DictccApiTtsAdapter().lookup({"text": "Haus", "lang": "de"})
+    assert calls == ["DEEN"]

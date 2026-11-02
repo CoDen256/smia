@@ -83,10 +83,15 @@ _PAIRS = {
 
 # For /tts and /inflections, which take a single `lang`, not a pair: any
 # confirmed lp/dir that puts `lang` on one side works as a self-lookup.
-_LANG_SELF_LOOKUP = {
-    "nb": ("DENO", 2),
-    "en": ("ENNO", 1),
-    "de": ("DEEN", 1),
+# `nb` gets two entries — dict.cc has no monolingual Norwegian dictionary,
+# only bilingual pairs, so a word filed only under NO<->EN (not NO<->DE)
+# would otherwise never be found (dictcc-norwegian-multi-pair). `en`/`de`
+# keep a single pair each — this service only cares about their Norwegian-
+# touching side.
+_LANG_SELF_LOOKUP_PAIRS: dict[str, list[tuple[str, int]]] = {
+    "nb": [("DENO", 2), ("ENNO", 1)],
+    "en": [("ENNO", 1)],
+    "de": [("DEEN", 1)],
 }
 
 # Norwegian's human-voice recording is confirmed (api.md); other
@@ -297,47 +302,92 @@ class DictccApiTranslateAdapter:
 class DictccApiInflectAdapter:
     def lookup(self, input_dict: dict) -> dict:
         word, lang = input_dict["word"], input_dict["lang"]
-        lookup_pair = _LANG_SELF_LOOKUP.get(lang)
-        if lookup_pair is None:
+        pairs = _LANG_SELF_LOOKUP_PAIRS.get(lang)
+        if pairs is None:
             raise UnsupportedPairError(f"dictcc_api does not support language {lang!r}")
-        lp, dir_ = lookup_pair
 
-        data = _get_json({"s": word, "dir": dir_, "lp": lp})
-        blocks = _parse_inflection_blocks(data.get("inflections_info", ""), data.get("inflections_repl", ""))
-        candidates = [{"lemma": word, **block} for block in blocks]
+        # Each Norwegian-touching pair is an independent dataset — a pair
+        # with no table for this word is a normal empty result, not a
+        # failure; only every pair erroring out fails the whole lookup
+        # (dictcc-norwegian-multi-pair design.md D2), so one pair's
+        # transient hiccup doesn't sink a lookup the other pair would have
+        # answered.
+        candidates: list[dict] = []
+        seen: set[tuple] = set()
+        errors: list[ProviderLookupError] = []
+        for lp, dir_ in pairs:
+            try:
+                data = _get_json({"s": word, "dir": dir_, "lp": lp})
+            except ProviderLookupError as exc:
+                errors.append(exc)
+                continue
+            blocks = _parse_inflection_blocks(data.get("inflections_info", ""), data.get("inflections_repl", ""))
+            for block in blocks:
+                candidate = {"lemma": word, **block}
+                # Identity for dedup is (pos, paradigm) — two pairs
+                # resolving to the exact same table collapse into one
+                # candidate; different paradigms for the same lemma (one
+                # pair fills a gap the other has) both survive, same as any
+                # other inflections provider's "never silently merge"
+                # philosophy.
+                key = (candidate["pos"], tuple(sorted(candidate["paradigm"].items())))
+                if key in seen:
+                    continue
+                seen.add(key)
+                candidates.append(candidate)
+
+        if errors and len(errors) == len(pairs):
+            raise errors[0]
+
         return {"candidates": candidates}
 
 
 class DictccApiTtsAdapter:
     def lookup(self, input_dict: dict) -> dict:
         word, lang = input_dict["text"], input_dict["lang"]
-        lookup_pair = _LANG_SELF_LOOKUP.get(lang)
-        if lookup_pair is None:
+        pairs = _LANG_SELF_LOOKUP_PAIRS.get(lang)
+        if pairs is None:
             raise UnsupportedPairError(f"dictcc_api does not support language {lang!r}")
-        lp, dir_ = lookup_pair
         dictcc_lang = _DICTCC_LANG_CODE[lang]
 
-        data = _get_json({"s": word, "dir": dir_, "lp": lp})
-        translations = data.get("translations", [])
-        if not translations:
-            return {"candidates": []}
-        entry_id = translations[0]["id"]
-
-        candidates = []
+        candidates: list[dict] = []
+        seen_sha: set[str] = set()
+        errors: list[ProviderLookupError] = []
         with session_scope() as db:
-            human = self._fetch_audio(
-                {"id": entry_id, "lang": f"{dictcc_lang}_rec_ip", "lp": lp, "text": word}
-            )
-            if human is not None:
-                sha256 = store(db, human, "audio/mpeg")
-                candidates.append({"sha256": sha256, "source": "human"})
+            for lp, dir_ in pairs:
+                try:
+                    data = _get_json({"s": word, "dir": dir_, "lp": lp})
+                    translations = data.get("translations", [])
+                    if not translations:
+                        continue
+                    entry_id = translations[0]["id"]
 
-            voice = _VOICE_FOR_LANG.get(lang)
-            if voice:
-                synthetic = self._fetch_audio({"id": entry_id, "lang": dictcc_lang, "lp": lp, "voice": voice})
-                if synthetic is not None:
-                    sha256 = store(db, synthetic, "audio/mpeg")
-                    candidates.append({"sha256": sha256, "source": "synthetic", "voice": voice})
+                    human = self._fetch_audio(
+                        {"id": entry_id, "lang": f"{dictcc_lang}_rec_ip", "lp": lp, "text": word}
+                    )
+                    if human is not None:
+                        sha256 = store(db, human, "audio/mpeg")
+                        if sha256 not in seen_sha:
+                            seen_sha.add(sha256)
+                            candidates.append({"sha256": sha256, "source": "human"})
+
+                    voice = _VOICE_FOR_LANG.get(lang)
+                    if voice:
+                        synthetic = self._fetch_audio({"id": entry_id, "lang": dictcc_lang, "lp": lp, "voice": voice})
+                        if synthetic is not None:
+                            sha256 = store(db, synthetic, "audio/mpeg")
+                            # Content-addressed identity (audio_cache.store)
+                            # is enough dedup — two pairs resolving to
+                            # byte-identical audio collapse naturally.
+                            if sha256 not in seen_sha:
+                                seen_sha.add(sha256)
+                                candidates.append({"sha256": sha256, "source": "synthetic", "voice": voice})
+                except ProviderLookupError as exc:
+                    errors.append(exc)
+                    continue
+
+        if errors and len(errors) == len(pairs):
+            raise errors[0]
 
         return {"candidates": candidates}
 
