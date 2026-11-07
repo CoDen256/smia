@@ -159,81 +159,86 @@ def _display_dictcc_phrase(phrase: str) -> str:
 
 
 def _normalize_label(label: str) -> str:
-    label = label.strip()
+    label = label.strip().lower()
     label = re.sub(r"^(article|å)\s+", "", label)
-    return label
+    return label.strip().lower()
 
 
-def _parse_inflection_blocks(inflections_info: str, inflections_repl: str) -> list[dict]:
-    if not inflections_info or not inflections_repl:
+def _parse_inflection_blocks(inflections: str) -> list[dict]:
+    if not inflections:
         return []
 
-    # html.unescape FIRST: naively splitting on ";" would also split inside
-    # "&nbsp;" (which contains its own semicolon), shifting every segment
-    # after the first by one slot — found live, where "kalv"'s inflection
-    # table came back with every value one slot off (e.g. the indefinite
-    # singular's value landing under "definite.sg").
-    segments = [s.strip() for s in html.unescape(inflections_repl).split(";")]
-    while segments and not segments[-1]:
-        segments.pop()  # trailing empty segment after the format's final ";"
-
-    blocks = list(_POS_BLOCK_RE.finditer(inflections_info))
-    seg_idx = 0
     candidates = []
+    # Match each table row containing a title attribute and row content
+    row_pattern = re.compile(r'<tr[^>]*title="([^"]*)"[^>]*>(.*?)</tr>', re.DOTALL)
 
-    for block_num, m in enumerate(blocks):
-        pos_tag, label_line = m.group(1), m.group(2)
-        labels = [_normalize_label(l) for l in label_line.split("|")]
-        n = len(labels)
+    for m_row in row_pattern.finditer(inflections):
+        title_attr = html.unescape(m_row.group(1))
+        row_content = m_row.group(2)
 
+        # Identify Part of Speech
+        pos_m = re.search(r'<b>(NOUN|VERB|ADJ|ADV)</b>', row_content)
+        if not pos_m:
+            continue
+        pos_tag = pos_m.group(1)
         if pos_tag not in _ENTRY_POS:
-            break  # unrecognized/complex shape (e.g. ADJ) — stop, best-effort
+            continue
 
-        # The raw HTML (`inflections`, not `inflections_repl`) shows a cell
-        # can itself hold multiple alternates joined by "/" — e.g. "hus"'s
-        # definite-plural cell is literally "husa / husene" one cell, one
-        # label. `inflections_repl` flattens that into an extra ";"-
-        # delimited segment with no label of its own, which a strict
-        # 1-segment-per-label read silently dropped (confirmed live,
-        # comparing the two fields side by side). Only the LAST block can
-        # safely claim its leftover segments — if another recognized block
-        # follows, exactly `n` segments are consumed to not misalign it.
-        is_last_block = block_num == len(blocks) - 1
-        block_segments = segments[seg_idx:] if is_last_block else segments[seg_idx:seg_idx + n]
-        seg_idx += len(block_segments)
-        extra_segments, block_segments = block_segments[n:], block_segments[:n]
+        # Extract labels from the title attribute
+        raw_labels = [l.strip() for l in title_attr.split("|")]
+        has_article = any("article" in l.lower() for l in raw_labels)
 
+        labels = []
+        for l in raw_labels:
+            norm = _normalize_label(l)
+            if "article" in norm:
+                continue
+            if norm:
+                labels.append(norm)
+
+        # Extract the cell containing inflection values
+        td_m = re.search(r'<td[^>]*width=["\']95%["\'][^>]*>(.*?)</td>', row_content, re.DOTALL)
+        if not td_m:
+            tds = re.findall(r'<td[^>]*>(.*?)</td>', row_content, re.DOTALL)
+            cell_html = tds[-1] if tds else ""
+        else:
+            cell_html = td_m.group(1)
+
+        # Split cell contents by the pipe separator spans
+        normalized_cell = re.sub(r'<span[^>]*>\s*\|\s*</span>', '|||', cell_html)
+        normalized_cell = normalized_cell.replace('|', '|||')
+
+        raw_segments = normalized_cell.split('|||')
+        segments = []
+        for seg in raw_segments:
+            clean_seg = re.sub(r'<[^>]+>', ' ', seg)
+            clean_seg = html.unescape(clean_seg)
+            clean_seg = re.sub(r'\s+', ' ', clean_seg).strip()
+            if clean_seg:
+                segments.append(clean_seg)
+
+        paradigm = {}
         label_map = _NOUN_LABELS if pos_tag == "NOUN" else _VERB_LABELS
-        values_by_key: dict[str, list[str]] = {}
-        article = None
-        for label, seg in zip(labels, block_segments):
+
+        # Map labels 1-to-1 with segments
+        for label, seg in zip(labels, segments):
             key = label_map.get(label)
-            if key is None:
+            if not key or not seg or seg == "-":
                 continue
-            parts = seg.split("\t")
-            if len(parts) < 2:
-                continue
-            display, clean = parts[0].strip(), parts[1].strip()
-            if not clean or clean == "-":
-                continue
-            values_by_key[key] = [clean]
-            if key == "sg_indef" and article is None:
-                tokens = display.split()
+
+            if key == "sg_indef" and has_article:
+                tokens = seg.split(maxsplit=1)
                 if len(tokens) > 1:
-                    article = tokens[0]
+                    paradigm["article"] = tokens[0]
+                    paradigm[key] = tokens[1]
+                else:
+                    paradigm[key] = seg
+            elif key == "infinitiv":
+                # Strip leading 'å ' if present
+                paradigm[key] = re.sub(r'^å\s+', '', seg)
+            else:
+                paradigm[key] = seg
 
-        last_key = label_map.get(labels[-1]) if labels else None
-        for seg in extra_segments:
-            parts = seg.split("\t")
-            if len(parts) < 2 or last_key is None:
-                continue
-            clean = parts[1].strip()
-            if clean and clean != "-":
-                values_by_key.setdefault(last_key, []).append(clean)
-
-        paradigm = {key: " / ".join(values) for key, values in values_by_key.items()}
-        if pos_tag == "NOUN" and article:
-            paradigm = {"article": article, **paradigm}
         candidates.append({"pos": _ENTRY_POS[pos_tag], "paradigm": paradigm})
 
     return candidates
@@ -274,7 +279,7 @@ class DictccApiTranslateAdapter:
         order: list[tuple[str | None, str]] = []
         for entry in translations:
             entry_type = entry.get("entry_type") or None
-            source = entry[source_field]
+            source = entry[source_field] # term2
             key = (entry_type, source)
             if key not in groups:
                 groups[key] = []
@@ -293,6 +298,9 @@ class DictccApiTranslateAdapter:
             # word match doesn't need its own text echoed back.
             if _normalize_dictcc_phrase(source) != query_norm:
                 context_parts.append(_display_dictcc_phrase(source))
+            elif source:
+                context_parts.append(f"{source}")
+                
             if context_parts:
                 candidate["context"] = " ".join(context_parts)
             candidates.append(candidate)
@@ -321,7 +329,7 @@ class DictccApiInflectAdapter:
             except ProviderLookupError as exc:
                 errors.append(exc)
                 continue
-            blocks = _parse_inflection_blocks(data.get("inflections_info", ""), data.get("inflections_repl", ""))
+            blocks = _parse_inflection_blocks(data.get("inflections"))
             for block in blocks:
                 candidate = {"lemma": word, **block}
                 # Identity for dedup is (pos, paradigm) — two pairs
