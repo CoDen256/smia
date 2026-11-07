@@ -187,9 +187,9 @@ def _parse_inflection_blocks(inflections: str) -> list[dict]:
         if pos_tag not in _POS_MAP:
             continue
 
-        # Extract cell content
-        td_m = re.search(r'<td[^>]*width=["\']95%["\'][^>]*>(.*?)</td>', row_content, re.DOTALL)
-        cell_html = td_m.group(1) if td_m else ""
+        # Extract all table cells and grab the inflection data cell dynamically (independent of attributes)
+        tds = re.findall(r'<td[^>]*>(.*?)</td>', row_content, re.DOTALL)
+        cell_html = tds[-1] if tds else ""
 
         # Normalize pipe separators into a common delimiter
         normalized_cells = re.sub(r'<span[^>]*class=["\']infl_pipe["\'][^>]*>\s*\|\s*</span>', '|||', cell_html)
