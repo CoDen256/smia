@@ -100,7 +100,11 @@ _LANG_SELF_LOOKUP_PAIRS: dict[str, list[tuple[str, int]]] = {
 _VOICE_FOR_LANG = {"nb": "Liv"}
 _DICTCC_LANG_CODE = {"nb": "NO", "en": "EN", "de": "DE"}
 
-_POS_BLOCK_RE = re.compile(r"<b>(NOUN|VERB|ADJ|ADV)</b>(?:\s|&nbsp;)*([^<]*)")
+_POS_MAP = {
+    "NOUN": "substantiv",
+    "VERB": "verb",
+    "ADJ": "adjektiv",
+}
 
 _NOUN_LABELS = {
     "sg": "sg_indef",
@@ -116,7 +120,13 @@ _VERB_LABELS = {
     "preterite": "preteritum",
     "pp": "perfektum",
 }
-_ENTRY_POS = {"NOUN": "substantiv", "VERB": "verb"}
+_ADJ_LABELS = {
+    "m/f": "positiv",
+    "n": "nøytrum",
+    "pl/definite": "flertall",
+    "comparative": "komparativ",
+    "superlative": "superlativ",
+}
 
 
 class UnsupportedPairError(ProviderLookupError):
@@ -158,88 +168,84 @@ def _display_dictcc_phrase(phrase: str) -> str:
     return _strip_infinitive_marker(phrase)
 
 
-def _normalize_label(label: str) -> str:
-    label = label.strip().lower()
-    label = re.sub(r"^(article|å)\s+", "", label)
-    return label.strip().lower()
-
 
 def _parse_inflection_blocks(inflections: str) -> list[dict]:
     if not inflections:
         return []
 
     candidates = []
-    # Match each table row containing a title attribute and row content
     row_pattern = re.compile(r'<tr[^>]*title="([^"]*)"[^>]*>(.*?)</tr>', re.DOTALL)
 
     for m_row in row_pattern.finditer(inflections):
         title_attr = html.unescape(m_row.group(1))
         row_content = m_row.group(2)
 
-        # Identify Part of Speech
         pos_m = re.search(r'<b>(NOUN|VERB|ADJ|ADV)</b>', row_content)
         if not pos_m:
             continue
         pos_tag = pos_m.group(1)
-        if pos_tag not in _ENTRY_POS:
+        if pos_tag not in _POS_MAP:
             continue
 
-        # Extract labels from the title attribute
+        # Extract cell content
+        td_m = re.search(r'<td[^>]*width=["\']95%["\'][^>]*>(.*?)</td>', row_content, re.DOTALL)
+        cell_html = td_m.group(1) if td_m else ""
+
+        # Normalize pipe separators into a common delimiter
+        normalized_cells = re.sub(r'<span[^>]*class=["\']infl_pipe["\'][^>]*>\s*\|\s*</span>', '|||', cell_html)
+        normalized_cells = normalized_cells.replace('|', '|||')
+
+        cell_list = normalized_cells.split('|||')
+        segments = []
+        for cell in cell_list:
+            # Split individual cell content by <br> if a cell spans multiple labels
+            sub_parts = re.split(r'<br\s*/?>', cell, flags=re.IGNORECASE)
+            for part in sub_parts:
+                clean_part = re.sub(r'<[^>]+>', '', part)
+                clean_part = html.unescape(clean_part)
+                clean_part = re.sub(r'\s+', ' ', clean_part).strip()
+                if clean_part:
+                    segments.append(clean_part)
+
+        # Extract and expand labels from the title attribute
         raw_labels = [l.strip() for l in title_attr.split("|")]
         has_article = any("article" in l.lower() for l in raw_labels)
 
-        labels = []
+        expanded_labels = []
         for l in raw_labels:
-            norm = _normalize_label(l)
-            if "article" in norm:
+            clean_l = l.replace("article", "").strip().lower()
+            if not clean_l:
                 continue
-            if norm:
-                labels.append(norm)
+            if "pl/definitecomparative" in clean_l:
+                expanded_labels.extend(["pl/definite", "comparative"])
+            else:
+                expanded_labels.append(clean_l.replace("å ", ""))
 
-        # Extract the cell containing inflection values
-        td_m = re.search(r'<td[^>]*width=["\']95%["\'][^>]*>(.*?)</td>', row_content, re.DOTALL)
-        if not td_m:
-            tds = re.findall(r'<td[^>]*>(.*?)</td>', row_content, re.DOTALL)
-            cell_html = tds[-1] if tds else ""
-        else:
-            cell_html = td_m.group(1)
-
-        # Split cell contents by the pipe separator spans
-        normalized_cell = re.sub(r'<span[^>]*>\s*\|\s*</span>', '|||', cell_html)
-        normalized_cell = normalized_cell.replace('|', '|||')
-
-        raw_segments = normalized_cell.split('|||')
-        segments = []
-        for seg in raw_segments:
-            clean_seg = re.sub(r'<[^>]+>', ' ', seg)
-            clean_seg = html.unescape(clean_seg)
-            clean_seg = re.sub(r'\s+', ' ', clean_seg).strip()
-            if clean_seg:
-                segments.append(clean_seg)
+        label_map = {
+            "NOUN": _NOUN_LABELS,
+            "VERB": _VERB_LABELS,
+            "ADJ": _ADJ_LABELS,
+        }[pos_tag]
 
         paradigm = {}
-        label_map = _NOUN_LABELS if pos_tag == "NOUN" else _VERB_LABELS
-
-        # Map labels 1-to-1 with segments
-        for label, seg in zip(labels, segments):
+        for label, seg in zip(expanded_labels, segments):
             key = label_map.get(label)
             if not key or not seg or seg == "-":
                 continue
 
-            if key == "sg_indef" and has_article:
+            if pos_tag == "NOUN" and key == "sg_indef" and has_article:
                 tokens = seg.split(maxsplit=1)
                 if len(tokens) > 1:
                     paradigm["article"] = tokens[0]
                     paradigm[key] = tokens[1]
                 else:
                     paradigm[key] = seg
-            elif key == "infinitiv":
-                # Strip leading 'å ' if present
+            elif pos_tag == "VERB" and key == "infinitiv":
                 paradigm[key] = re.sub(r'^å\s+', '', seg)
             else:
                 paradigm[key] = seg
 
-        candidates.append({"pos": _ENTRY_POS[pos_tag], "paradigm": paradigm})
+        candidates.append({"pos": _POS_MAP[pos_tag], "paradigm": paradigm})
 
     return candidates
 
@@ -300,7 +306,7 @@ class DictccApiTranslateAdapter:
                 context_parts.append(_display_dictcc_phrase(source))
             elif source:
                 context_parts.append(f"{source}")
-                
+
             if context_parts:
                 candidate["context"] = " ".join(context_parts)
             candidates.append(candidate)
