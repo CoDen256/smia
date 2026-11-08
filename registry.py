@@ -11,7 +11,7 @@ and to enforce "provider required unless exactly one is configured".
 
 from __future__ import annotations
 
-KINDS = ("inflections", "ipa", "tts", "translations", "stt")
+KINDS = ("inflections", "ipa", "tts", "translations", "stt", "examples")
 
 
 class UnknownKindError(Exception):

@@ -23,3 +23,7 @@ from . import dictcc_api  # noqa: F401
 from . import dictcc_static  # noqa: F401
 from . import elevenlabs  # noqa: F401
 from . import manual_link  # noqa: F401
+from . import tatoeba  # noqa: F401
+from . import leipzig  # noqa: F401
+from . import ordbokene_examples  # noqa: F401
+from . import kaikki_examples  # noqa: F401

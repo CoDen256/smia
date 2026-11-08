@@ -25,7 +25,7 @@ from __future__ import annotations
 import datetime
 
 from sqlalchemy import DateTime, Integer, LargeBinary, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -86,10 +86,10 @@ class OrdbankBoying(Base):
 
 class KaikkiEntry(Base):
     """One row per kaikki.org/Wiktionary dump entry (D-S4: imported once,
-    queried by three adapters — `kaikki` for `/inflections` via `forms`,
-    and later `/ipa`/`/tts` via `sounds`, which is why both raw `jsonb`
-    blobs are kept as-imported rather than normalized into their own
-    tables up front)."""
+    queried by four adapters — `kaikki` for `/inflections` via `forms`,
+    `/ipa`/`/tts` via `sounds`, and `/examples` via `examples` — which is
+    why all three raw `jsonb` blobs are kept as-imported rather than
+    normalized into their own tables up front)."""
 
     __tablename__ = "kaikki_entry"
 
@@ -99,6 +99,7 @@ class KaikkiEntry(Base):
     gender: Mapped[str | None] = mapped_column(Text, nullable=True)
     forms: Mapped[list] = mapped_column(JSONB, nullable=False)
     sounds: Mapped[list] = mapped_column(JSONB, nullable=False)
+    examples: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
 
 
 class OrdbankFullform(Base):
@@ -198,6 +199,40 @@ class TtsAudio(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class CorpusSentence(Base):
+    """Backs both `/examples` corpus providers (`tatoeba`, `leipzig`) — one
+    table, not one per provider, because both ask the identical question
+    ("sentences containing these surface forms") and differ only in which
+    `corpus` values they filter to (examples-api design D4). A future
+    corpus is a new `corpus` value and an import script, no schema change.
+
+    `word_count` is precomputed at import time, not derived per query,
+    because it is the dominant ranking signal (design D5) and recomputing
+    it over tens of thousands of candidate rows per request would be the
+    slowest part of the lookup.
+
+    `tsv` is `to_tsvector('simple', text)` — deliberately NOT the
+    `'norwegian'` config. Measured against a real postgres:16: the
+    Norwegian stemmer doesn't relate umlaut plurals to their lemma
+    (`bok`/`bøker`, `mann`/`menn`, `hånd`/`hender`, `fot`/`føtter`), and its
+    176-entry stopword list drops `kom`/`var`/`ble`/`hadde`/`er` — the
+    preterites of `komme`/`være`/`bli`/`ha` — from the index entirely, so
+    no example sentence for those verbs' past tense could ever be found.
+    `simple` indexes every literal token with no stemming/stopwords; all
+    morphology is instead handled by expanding the query against
+    `ordbank_fullform` (design D3). Do not "optimise" this back to
+    `'norwegian'`."""
+
+    __tablename__ = "corpus_sentence"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    corpus: Mapped[str] = mapped_column(Text, nullable=False)
+    ext_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    word_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    tsv: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
 
 
 class WikipronEntry(Base):

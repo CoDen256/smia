@@ -23,8 +23,10 @@ from scripts import (
     import_dictcc_static,
     import_ipadict,
     import_kaikki,
+    import_leipzig,
     import_nst,
     import_ordbank,
+    import_tatoeba,
     import_wikipron,
 )
 
@@ -58,6 +60,23 @@ def _find_dictcc_static_args() -> list[str]:
     return args
 
 
+def _corpus_partition_empty(corpora: list[str]):
+    """Returns an `is_empty` check scoped to a `corpus_sentence` partition
+    — `tatoeba`/`leipzig` share one table (design D4), so a plain
+    table-wide emptiness check would make importing one skip the other."""
+    def _check() -> bool:
+        engine = get_engine()
+        with engine.connect() as conn:
+            return (
+                conn.execute(
+                    text("SELECT COUNT(*) FROM corpus_sentence WHERE corpus = ANY(:corpora)"),
+                    {"corpora": corpora},
+                ).scalar()
+                == 0
+            )
+    return _check
+
+
 _IMPORTS = [
     ("ordbank_fullform", import_ordbank.run, ["providers/nbno/20220201_norsk_ordbank_nob_2005.tar.gz"]),
     ("kaikki_entry", import_kaikki.run, ["providers/kaikii/nb.jsonl"]),
@@ -69,6 +88,20 @@ _IMPORTS = [
     ("ipa_dict_entry", import_ipadict.run, ["providers/open-dict/nb.txt"]),
     ("wikipron_entry", import_wikipron.run, ["providers/wikipron/nob_latn_broad.tsv"]),
     ("dictcc_static_entry", import_dictcc_static.run, _find_dictcc_static_args),
+    (
+        _corpus_partition_empty(["tatoeba"]),
+        import_tatoeba.run,
+        ["providers/tatoeba/nob_sentences.tsv.bz2"],
+    ),
+    (
+        _corpus_partition_empty(["web_2020", "news_2013", "wikipedia_2014"]),
+        import_leipzig.run,
+        [
+            "providers/leipzig/nob-no_web_2020_1M.tar.gz",
+            "providers/leipzig/nob_news_2013_1M.tar.gz",
+            "providers/leipzig/nob_wikipedia_2014_1M.tar.gz",
+        ],
+    ),
 ]
 
 
@@ -82,8 +115,10 @@ def main() -> None:
     subprocess.run(["alembic", "upgrade", "head"], check=True)
 
     for table, run, args in _IMPORTS:
-        if not _table_is_empty(table):
-            print(f"[bootstrap] {table} already populated, skipping import", file=sys.stderr)
+        is_empty = table() if callable(table) else _table_is_empty(table)
+        if not is_empty:
+            label = table.__name__ if callable(table) else table
+            print(f"[bootstrap] {label} already populated, skipping import", file=sys.stderr)
             continue
         try:
             resolved_args = args() if callable(args) else args

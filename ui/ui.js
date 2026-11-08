@@ -19,6 +19,7 @@ const EXAMPLE_BODIES = {
   ipa: { text: "hus", lang: "nb" },
   tts: { text: "hus", lang: "nb" },
   translations: { text: "hus", from: "nb", to: "en" },
+  examples: { text: "kalv", lang: "nb", limit: 3 },
 };
 
 // The in-browser MediaRecorder result, when the operator records instead

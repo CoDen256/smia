@@ -2,3 +2,24 @@ https://kaikki.org/dictionary/
 https://ordbokapi.org/
 https://ordbokene.no/
 https://filmot.com/ (TTS)
+
+# examples-api corpus providers (task 2.7) — licence terms recorded here
+# because some are non-commercial-only; verify before any commercial use.
+https://downloads.tatoeba.org/exports/ (nob_sentences.tsv.bz2)
+  Licence: CC BY 2.0 FR for most sentences; a portion is CC0 1.0 (no
+  attribution required). Licence is per-sentence on tatoeba.org itself;
+  the bulk export does not carry per-row licence tags, so treat the whole
+  export as CC BY 2.0 FR (attribution) to be safe.
+https://wortschatz.uni-leipzig.de/en/download (Norwegian Bokmål nob-no_web_2020_1M, nob_news_2013_1M, nob_wikipedia_2014_1M)
+  Licence (per wortschatz.uni-leipzig.de/en/usage, Projekt Deutscher
+  Wortschatz / Leipzig Corpora Collection): downloadable text corpora are
+  CC BY (attribution); the online query interface/API is CC BY-NC
+  (non-commercial) instead — a distinct, more restrictive licence from the
+  download licence. Any use beyond the WWW interface's own query means,
+  and any commercial use, requires explicit written permission from the
+  copyright holder (Universität Leipzig / Sächsische Akademie der
+  Wissenschaften / InfAI). Attribution: "© Universität Leipzig / Sächsische
+  Akademie der Wissenschaften / InfAI". Confirmed via search of the terms-
+  of-usage page's own text (the page itself is behind an anti-scraping
+  challenge that blocked a direct fetch) — reconfirm against
+  wortschatz.uni-leipzig.de/en/usage directly before any commercial use.

@@ -81,6 +81,27 @@ def _extract_translations_input(body: dict) -> dict:
 register_lookup_routes(app, "translations", _extract_translations_input)
 
 
+def _extract_examples_input(body: dict) -> dict:
+    if "text" not in body:
+        raise ValueError("text is required")
+    lang = body.get("lang", "nb")
+    if lang != "nb":
+        raise ValueError("lang must be 'nb' — /examples only supports Norwegian Bokmål")
+    limit = body.get("limit", 3)
+    try:
+        limit = int(limit)
+    except (TypeError, ValueError):
+        limit = 3
+    limit = max(1, min(10, limit))
+    # `limit` stays inside the extracted input dict (design D6) so it
+    # participates in the cache key — a limit=3 and limit=10 request for
+    # the same word are distinct cache resources holding different payloads.
+    return {"text": body["text"], "lang": lang, "limit": limit}
+
+
+register_lookup_routes(app, "examples", _extract_examples_input)
+
+
 @app.route("/stt", methods=["POST"])
 def post_stt():
     from cache import ProviderLookupError, run_lookup

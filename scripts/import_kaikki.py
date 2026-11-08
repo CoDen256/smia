@@ -13,6 +13,13 @@ requirement — there's no use for those tags outside `/inflect`, and
 dropping them here means every reader downstream only ever sees
 paradigm-shape-compatible forms.
 
+`examples` (examples-api task 2.5) is the opposite: stored raw and
+unfiltered, every `senses[].examples[]` entry exactly as the dump has it.
+The non-sentence (morphology-fragment) filter is a query-time concern in
+`adapters/kaikki_examples.py` per design D8, not an import-time one —
+unlike `forms`'s imperative/passive filter, the raw examples may be useful
+to a later reader and the filtering heuristic is likely to need tuning.
+
 Run: python -m scripts.import_kaikki providers/kaikii/kaikki.org-dictionary-NorwegianBokmål.jsonl
 """
 
@@ -56,6 +63,13 @@ def _filtered_forms(entry: dict) -> list[dict]:
     ]
 
 
+def _all_examples(entry: dict) -> list[dict]:
+    examples = []
+    for sense in entry.get("senses", []):
+        examples.extend(sense.get("examples", []))
+    return examples
+
+
 def run(jsonl_path: str, batch_size: int = 2000) -> None:
     engine = get_engine()
     conn = engine.raw_connection()
@@ -74,11 +88,12 @@ def run(jsonl_path: str, batch_size: int = 2000) -> None:
                     _gender_for(entry),
                     Json(_filtered_forms(entry)),
                     Json(entry.get("sounds", [])),
+                    Json(_all_examples(entry)),
                 ))
                 if len(batch) >= batch_size:
                     execute_values(
                         cur,
-                        "INSERT INTO kaikki_entry (word, pos, gender, forms, sounds) VALUES %s",
+                        "INSERT INTO kaikki_entry (word, pos, gender, forms, sounds, examples) VALUES %s",
                         batch,
                     )
                     total += len(batch)
@@ -86,7 +101,7 @@ def run(jsonl_path: str, batch_size: int = 2000) -> None:
             if batch:
                 execute_values(
                     cur,
-                    "INSERT INTO kaikki_entry (word, pos, gender, forms, sounds) VALUES %s",
+                    "INSERT INTO kaikki_entry (word, pos, gender, forms, sounds, examples) VALUES %s",
                     batch,
                 )
                 total += len(batch)
