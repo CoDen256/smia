@@ -6,3 +6,7 @@ node_modules/
 
 research/
 providers/nbno/nb_uttale_leksika.zip
+# Leipzig Corpora Collection archives (~200MB each) — over GitHub's 100MB
+# hard push limit; re-download from providers/sources' recorded URLs if
+# needed, bootstrap.py already skips the import gracefully when absent.
+providers/leipzig/*.tar.gz
