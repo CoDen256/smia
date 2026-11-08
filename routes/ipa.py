@@ -78,38 +78,65 @@ def _post():
         return response, 200
 
 
+def _merge_candidates(candidates: list[dict]) -> list[dict]:
+    """Candidates sharing an identical `ipa` collapse into one: if none of
+    them carry a `variety`, that's a plain dedupe; if any do, the varieties
+    join with `/` on the single surviving candidate. Order is first-seen,
+    for both the distinct `ipa` values and the varieties joined under each."""
+    varieties_by_ipa: dict[str, list[str]] = {}
+    order: list[str] = []
+    for c in candidates:
+        ipa = c["ipa"]
+        if ipa not in varieties_by_ipa:
+            varieties_by_ipa[ipa] = []
+            order.append(ipa)
+        variety = c.get("variety")
+        if variety is not None and variety not in varieties_by_ipa[ipa]:
+            varieties_by_ipa[ipa].append(variety)
+
+    merged = []
+    for ipa in order:
+        varieties = varieties_by_ipa[ipa]
+        if varieties:
+            merged.append({"ipa": ipa, "variety": "/".join(varieties)})
+        else:
+            merged.append({"ipa": ipa})
+    return merged
+
+
 def _resolve(db, provider: str, text: str, lang: str, force_refresh: bool) -> dict:
     # Whole-phrase attempt, crossing the norwegian-input query variants
     # (design D7) — so "en kalv" tries "en kalv" then "kalv" as a phrase
     # before anything is tokenized.
-    first_variant_payload = None
-    phrase_payload = None
+    first_variant_candidates = None
+    phrase_candidates = None
     for i, variant in enumerate(query_variants(text)):
         payload, _rid, _cached = run_lookup(
             db, "ipa", provider, {"text": variant, "lang": lang}, force_refresh=force_refresh
         )
+        candidates = _merge_candidates(payload["candidates"])
         if i == 0:
-            first_variant_payload = payload
-        if payload["candidates"]:
-            phrase_payload = payload
+            first_variant_candidates = candidates
+        if candidates:
+            phrase_candidates = candidates
             break
 
-    if phrase_payload is not None:
-        return {"provider": provider, "mode": "phrase", "candidates": phrase_payload["candidates"]}
+    if phrase_candidates is not None:
+        return {"provider": provider, "mode": "phrase", "candidates": phrase_candidates}
 
     tokens = tokenize(text)
     if len(tokens) <= 1:
         # Single-token input never splits (design D6) — report whatever
         # the phrase attempt on the caller's own text produced, including
         # an empty list.
-        return {"provider": provider, "mode": "phrase", "candidates": first_variant_payload["candidates"]}
+        return {"provider": provider, "mode": "phrase", "candidates": first_variant_candidates}
 
     token_entries = []
     for token in tokens:
         tok_payload, _rid, _cached = run_lookup(
             db, "ipa", provider, {"text": token, "lang": lang}, force_refresh=force_refresh
         )
-        token_entries.append({"text": token, "candidates": tok_payload["candidates"]})
+        token_entries.append({"text": token, "candidates": _merge_candidates(tok_payload["candidates"])})
 
     result = {"provider": provider, "mode": "per_word", "tokens": token_entries}
     if all(len(entry["candidates"]) == 1 for entry in token_entries):

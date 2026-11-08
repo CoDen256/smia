@@ -1,7 +1,9 @@
 ## MODIFIED Requirements
 
 ### Requirement: Pronunciation lookup returns multiple variety candidates
-`POST /ipa` SHALL accept `{text, lang, provider}` (`lang` defaults to `nb` — only Norwegian Bokmål is supported initially) and return a response carrying a `mode` field discriminating how the transcription was obtained, calling only the named provider per the `lookup-cache` no-fallback rule. Every candidate's transcription is under the single field `ipa`, regardless of whether the source provider calls it a phonemic or phonetic rendering — that distinction isn't surfaced to callers. A provider that has pronunciation data for more than one dialect/flavour SHALL return one candidate per variety rather than picking one.
+`POST /ipa` SHALL accept `{text, lang, provider}` (`lang` defaults to `nb` — only Norwegian Bokmål is supported initially) and return a response carrying a `mode` field discriminating how the transcription was obtained, calling only the named provider per the `lookup-cache` no-fallback rule. Every candidate's transcription is under the single field `ipa`, regardless of whether the source provider calls it a phonemic or phonetic rendering — that distinction isn't surfaced to callers. A provider that has pronunciation data for more than one dialect/flavour SHALL return one candidate per **distinct transcription**, not one per variety: candidates that share an identical `ipa` value SHALL be merged into a single candidate, rather than appearing as separate, duplicate-sounding rows.
+
+Merging works as follows: when two or more candidates share the same `ipa` and at least one carries a `variety`, they collapse into one candidate whose `variety` is every one of their varieties joined with `/`, in first-seen order. When candidates share the same `ipa` and none carries a `variety`, they simply dedupe to one candidate with no `variety` key.
 
 For a single-word request, and for a multi-word request the named provider has a whole-phrase entry for, the response SHALL be `{provider, mode: "phrase", candidates: [{ipa, variety?}]}` — the `candidates` shape this capability has always returned, with `mode` added.
 
@@ -9,7 +11,15 @@ For a multi-word request the named provider has no whole-phrase entry for, the r
 
 #### Scenario: Dialect-aware provider
 - **WHEN** the named provider has pronunciation data for multiple dialect regions (e.g. the NST lexicon)
-- **THEN** the response's `candidates` array contains one entry per dialect, each tagged with its `variety`
+- **THEN** the response's `candidates` array contains one entry per *distinct* transcription, each tagged with a `variety` naming every dialect that shares it (joined with `/` when more than one)
+
+#### Scenario: Identical transcriptions across varieties merge
+- **WHEN** two or more of a provider's dialect varieties produce byte-identical `ipa` transcriptions for the same word
+- **THEN** those varieties collapse into a single candidate whose `variety` lists all of them joined with `/`, rather than appearing as separate candidates with the same `ipa`
+
+#### Scenario: Duplicate candidates with no variety dedupe
+- **WHEN** a provider's lookup yields two or more candidates sharing the same `ipa` and none of them carries a `variety`
+- **THEN** the response's `candidates` array contains that `ipa` exactly once, with no `variety` key
 
 #### Scenario: Single-variety provider
 - **WHEN** the named provider has only one pronunciation per word (no dialect data)
@@ -82,7 +92,7 @@ Tokenization SHALL follow the `norwegian-input` rules: hyphenated compounds stay
 
 #### Scenario: Dialect candidates survive per token
 - **WHEN** a phrase is split against a multi-dialect provider (e.g. the NST lexicon)
-- **THEN** each token's `candidates` array carries one entry per dialect variety, exactly as a single-word lookup would
+- **THEN** each token's `candidates` array carries one entry per *distinct* transcription, merged across varieties exactly as a single-word lookup would
 
 #### Scenario: A hyphenated compound is one token
 - **WHEN** a phrase containing a hyphenated compound is split

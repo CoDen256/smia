@@ -56,3 +56,10 @@
 
 - [x] 8.1 Record in the change record that stabbur's enrichment panel renders a flat `candidates` array and will show nothing for a `mode: "per_word"` response until updated — same visible outcome as today's empty list, so not a regression, but it is the follow-up work that makes this usable from the UI.
 - [x] 8.2 Verify `tun/docs/06-smia.md`'s `/ipa` row still describes the contract correctly, and update its Out column to mention `mode`/`tokens` if not.
+
+## 9. Candidate merging (addendum, design D9)
+
+- [x] 9.1 `routes/ipa.py`: add `_merge_candidates()` — candidates sharing an identical `ipa` collapse into one; if any carry a `variety`, join all of theirs with `/`; if none do, plain dedupe. Applied to the phrase attempt's candidates and to each token's candidates in the per-word split.
+- [x] 9.2 Update `specs/ipa-api/spec.md`'s "Pronunciation lookup returns multiple variety candidates" and "Dialect candidates survive per token" scenarios to specify merge-by-`ipa` rather than one-candidate-per-variety.
+- [x] 9.3 `tests/test_ipa_multiword.py`: against `nst`, a word whose varieties share one transcription (`"god"`) merges to a single candidate with every variety joined by `/`; a word with two genuinely distinct transcriptions (`"morgen"`) keeps two candidates. A mock provider returning duplicate no-variety candidates dedupes to one.
+- [x] 9.4 Confirm `joined` eligibility still only reflects genuine single-candidate tokens post-merge (merging can only make `joined` more likely to apply, never less, and never collapses two genuinely distinct transcriptions).

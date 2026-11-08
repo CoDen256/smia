@@ -145,12 +145,39 @@ def test_joined_absent_when_a_token_is_ambiguous(client):
     assert "joined" not in body
 
 
-def test_dialect_candidates_survive_per_token_against_multi_dialect_provider(client):
+def test_dialect_candidates_with_identical_ipa_merge_varieties(client):
+    # "god" has the same `'guː` transcription across all 11 of nst's
+    # varieties — those collapse into one candidate whose `variety` joins
+    # every dialect that shares it with "/", rather than 11 duplicate rows.
     resp = client.post("/ipa", json={"text": "god morgen", "lang": "nb", "provider": "nst"}, headers=AUTH)
     body = resp.get_json()
-    for token in body["tokens"]:
-        varieties = {c["variety"] for c in token["candidates"]}
-        assert len(varieties) > 1
+    god = next(t for t in body["tokens"] if t["text"] == "god")
+    assert len(god["candidates"]) == 1
+    varieties = god["candidates"][0]["variety"].split("/")
+    assert len(varieties) == len(set(varieties))
+    assert len(varieties) > 1
+
+    # "morgen" genuinely has two distinct pronunciations across its
+    # varieties — those stay as two separate candidates, each with its own
+    # merged `variety` string, not collapsed into one.
+    morgen = next(t for t in body["tokens"] if t["text"] == "morgen")
+    assert len(morgen["candidates"]) == 2
+    ipas = [c["ipa"] for c in morgen["candidates"]]
+    assert len(ipas) == len(set(ipas))
+
+
+def test_same_ipa_no_variety_candidates_dedupe_to_one():
+    dup = MagicMock()
+    dup.lookup.return_value = {"candidates": [{"ipa": "x"}, {"ipa": "x"}, {"ipa": "y"}]}
+    registry.register("ipa", "dupprovider", dup)
+
+    import os
+    os.environ["SMIA_AUTH_TOKEN"] = "test-token"
+    client = real_app.test_client()
+    resp = client.post("/ipa", json={"text": "word", "lang": "nb", "provider": "dupprovider"}, headers=AUTH)
+    body = resp.get_json()
+    assert body["mode"] == "phrase"
+    assert body["candidates"] == [{"ipa": "x"}, {"ipa": "y"}]
 
 
 def test_hyphenated_compound_is_one_token(client):

@@ -249,6 +249,30 @@ the same selective opt-out `app.py` already uses for `/tts`
 (`register_get=False`) and `/stt` (fully custom). No change to
 `routes/generic.py` itself, so no other kind is affected.
 
+### D9 — Candidates sharing an identical `ipa` are merged, not listed per variety
+
+Operator decision during implementation: `nst` routinely returns the exact
+same transcription for several of its eleven varieties (e.g. `"god"` is
+`'guː` across all of them) — listing eleven identical-looking candidates is
+noise, not information. `routes/ipa.py` now merges candidates by `ipa`
+after every lookup (the phrase attempt and each token lookup alike):
+
+- Candidates sharing an `ipa` where at least one carries a `variety`
+  collapse into one candidate whose `variety` is the `/`-joined union of
+  all of theirs, first-seen order (`"standard/central_spoken/..."`).
+- Candidates sharing an `ipa` with no `variety` on any of them simply
+  dedupe to one.
+
+This runs at the route layer (`_merge_candidates`), not in `nst`'s adapter
+— consistent with D4's "no adapter changes" choice, and it applies equally
+to every provider, not just the dialect-aware one.
+
+Interaction with D2 (`joined`): merging only reduces a token's candidate
+*count*, never increases it, so it only ever makes `joined` *more* likely
+to be eligible (a token whose varieties all shared one transcription now
+counts as one candidate, not many) — it never fabricates agreement where a
+real difference exists, since distinct `ipa` values still never merge.
+
 ## Risks / Trade-offs
 
 - **[Risk] `joined` gets treated as the phrase's true pronunciation** by a
