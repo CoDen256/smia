@@ -308,11 +308,14 @@ class DictccApiTranslateAdapter:
             if entry_type:
                 context_parts.append(f"[{entry_type}]")
             # Only surface the source phrase when it's more than the bare
+            # Only surface the source phrase when it's more than the bare
             # query word (stripped of dict.cc's own grammar annotations
             # like "{m}" and the verb infinitive marker "å ") — a direct
             # word match doesn't need its own text echoed back.
             if normalize_dictcc_phrase(source) != query_norm:
                 context_parts.append(display_dictcc_phrase(source))
+            elif source:
+                context_parts.append(f"{source}")
 
             if context_parts:
                 candidate["context"] = " ".join(context_parts)

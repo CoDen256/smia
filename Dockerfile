@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY app.py auth.py cache.py registry.py audio_cache.py health.py .
+COPY app.py auth.py cache.py registry.py audio_cache.py health.py norwegian.py .
 COPY db/ ./db/
 COPY adapters/ ./adapters/
 COPY routes/ ./routes/

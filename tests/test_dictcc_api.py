@@ -103,9 +103,12 @@ def _mock_response(json_data):
 
 
 def test_translate_parses_best_match():
+    # Even an exact word match still echoes the raw source phrase in
+    # context (intentional — e.g. "[verb] å spille" after a noun sense),
+    # not just the entry type.
     with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_KALV_RESPONSE)):
         result = DictccApiTranslateAdapter().lookup({"text": "kalv", "from": "nb", "to": "en"})
-    assert result == {"candidates": [{"text": "calf", "context": "[noun]"}]}
+    assert result == {"candidates": [{"text": "calf", "context": "[noun] kalv {m}"}]}
 
 
 def test_translate_unsupported_pair_raises():
@@ -136,7 +139,7 @@ def test_translate_untyped_phrase_entry_gets_source_phrase_as_context():
         result = DictccApiTranslateAdapter().lookup({"text": "igjen", "from": "nb", "to": "en"})
     assert result == {
         "candidates": [
-            {"text": "again", "context": "[adv]"},
+            {"text": "again", "context": "[adv] igjen"},
             {"text": "Come on!", "context": "Kom igjen!"},
         ]
     }
@@ -155,7 +158,7 @@ def test_translate_groups_same_entry_type_into_one_candidate():
     }
     with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(response)):
         result = DictccApiTranslateAdapter().lookup({"text": "calf", "from": "en", "to": "nb"})
-    assert result == {"candidates": [{"text": "kalv {m}/kalve {m}", "context": "[noun]"}]}
+    assert result == {"candidates": [{"text": "kalv {m}/kalve {m}", "context": "[noun] calf"}]}
 
 
 _KOMME_RESPONSE = {
@@ -178,15 +181,16 @@ def test_translate_separates_distinct_phrasal_verb_senses():
     # candidate. Entries sharing the identical source phrase ("å komme
     # seg" x2, "å komme i vei" x2 here) are genuine synonyms and join with
     # "/"; a different phrase ("å komme over") becomes its own candidate.
-    # The bare "å komme" match needs no phrase echoed back in its context
-    # (it's exactly the query, modulo the infinitive marker); the others
-    # show their phrase (marker stripped) so it's clear what's being
-    # translated.
+    # Even the bare "å komme" match (exactly the query, modulo the
+    # infinitive marker) still echoes its own raw source phrase in
+    # context, same as every other sense; the others show their phrase
+    # (marker stripped, since it differs from the query) so it's clear
+    # what's being translated.
     with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_KOMME_RESPONSE)):
         result = DictccApiTranslateAdapter().lookup({"text": "komme", "from": "nb", "to": "en"})
     assert result == {
         "candidates": [
-            {"text": "to come", "context": "[verb]"},
+            {"text": "to come", "context": "[verb] å komme"},
             {"text": "to overcome", "context": "[verb] komme over"},
             {"text": "to recover/to get better [in health]", "context": "[verb] komme seg"},
             {"text": "to start/to get on", "context": "[verb] komme i vei"},
