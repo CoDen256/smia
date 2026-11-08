@@ -50,3 +50,21 @@ def test_degree_inflecting_adverb_shape(adapter):
 def test_unknown_word_is_empty_not_error(adapter):
     result = adapter.lookup({"word": "qzxnotaword999", "lang": "nb"})
     assert result == {"candidates": []}
+
+
+def test_citation_form_resolves_bare_noun(adapter):
+    # norwegian-input-normalization task 6.1: "et hus" resolves to hus's
+    # substantiv paradigm via the `= ANY(:variants)` predicate.
+    result = adapter.lookup({"word": "et hus", "lang": "nb"})
+    nouns = [c for c in result["candidates"] if c["pos"] == "substantiv"]
+    assert nouns
+    assert all(c["lemma"] == "hus" for c in nouns)
+
+
+def test_capitalised_word_still_resolves(adapter):
+    # norwegian-input-normalization task 6.4: case folding is additive,
+    # never a replacement — a capitalised headword still resolves on its
+    # as-given variant.
+    result = adapter.lookup({"word": "Åbo", "lang": "nb"})
+    assert result["candidates"]
+    assert all(c["lemma"] == "Åbo" for c in result["candidates"])

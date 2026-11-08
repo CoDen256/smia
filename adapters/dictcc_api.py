@@ -62,6 +62,7 @@ import requests
 from audio_cache import store
 from cache import ProviderLookupError
 from db.session import session_scope
+from norwegian import display_dictcc_phrase, normalize_dictcc_phrase, query_variants
 from registry import registry
 
 _APP_VERSION_CODE = "260804"
@@ -145,30 +146,6 @@ def _get_json(params: dict) -> dict:
         raise ProviderLookupError(f"dict.cc request failed: {exc}") from exc
 
 
-_ANNOTATION_RE = re.compile(r"[\{\[][^}\]]*[\}\]]")
-
-
-def _strip_infinitive_marker(phrase: str) -> str:
-    return phrase[2:].lstrip() if phrase.lower().startswith("å ") else phrase
-
-
-def _normalize_dictcc_phrase(phrase: str) -> str:
-    """For comparing a dict.cc source-language field against the bare query
-    word: strips grammar annotations dict.cc appends to the word itself
-    (`"kalv {m}"` -> `"kalv"`) and the verb infinitive marker (`"å komme"`
-    -> `"komme"`), so a direct word match isn't mistaken for a distinct
-    phrase just because of that annotation/marker."""
-    return _strip_infinitive_marker(_ANNOTATION_RE.sub("", phrase).strip()).strip().lower()
-
-
-def _display_dictcc_phrase(phrase: str) -> str:
-    """For showing a source phrase as context: only strips the infinitive
-    marker (annotations like "{m}" are kept — they're part of what's
-    actually being displayed, unlike in `_normalize_dictcc_phrase`)."""
-    return _strip_infinitive_marker(phrase)
-
-
-
 def _parse_inflection_blocks(inflections: str) -> list[dict]:
     if not inflections:
         return []
@@ -187,9 +164,17 @@ def _parse_inflection_blocks(inflections: str) -> list[dict]:
         if pos_tag not in _POS_MAP:
             continue
 
-        # Extract all table cells and grab the inflection data cell dynamically (independent of attributes)
-        tds = re.findall(r'<td[^>]*>(.*?)</td>', row_content, re.DOTALL)
-        cell_html = tds[-1] if tds else ""
+        # The inflection data cell is marked width="95%" — prefer that
+        # (live-confirmed: some rows have a trailing empty `<td>` *after*
+        # the data cell, e.g. German nouns' `align="right"` cell, so the
+        # *last* `<td>` is not reliably the data one). Fall back to the
+        # last cell only when no such attribute is present.
+        cell_m = re.search(r'<td[^>]*width=["\']95%["\'][^>]*>(.*?)</td>', row_content, re.DOTALL)
+        if cell_m:
+            cell_html = cell_m.group(1)
+        else:
+            tds = re.findall(r'<td[^>]*>(.*?)</td>', row_content, re.DOTALL)
+            cell_html = tds[-1] if tds else ""
 
         # Normalize pipe separators into a common delimiter
         normalized_cells = re.sub(r'<span[^>]*class=["\']infl_pipe["\'][^>]*>\s*\|\s*</span>', '|||', cell_html)
@@ -207,19 +192,28 @@ def _parse_inflection_blocks(inflections: str) -> list[dict]:
                 if clean_part:
                     segments.append(clean_part)
 
-        # Extract and expand labels from the title attribute
+        # Extract and expand labels from the title attribute. Each label's
+        # own "article" marker is tracked individually (not a single
+        # row-wide flag) — the Norwegian 4-slot table only marks the
+        # indefinite singular ("article indefinite.sg | definite.sg | ..."),
+        # but German's 2-slot table marks *every* slot ("article sg |
+        # article pl"), since each German slot's cell literally carries its
+        # own article word ("das Haus" | "die Häuser").
         raw_labels = [l.strip() for l in title_attr.split("|")]
-        has_article = any("article" in l.lower() for l in raw_labels)
 
         expanded_labels = []
+        label_has_article = []
         for l in raw_labels:
+            is_article = "article" in l.lower()
             clean_l = l.replace("article", "").strip().lower()
             if not clean_l:
                 continue
             if "pl/definitecomparative" in clean_l:
                 expanded_labels.extend(["pl/definite", "comparative"])
+                label_has_article.extend([is_article, is_article])
             else:
                 expanded_labels.append(clean_l.replace("å ", ""))
+                label_has_article.append(is_article)
 
         label_map = {
             "NOUN": _NOUN_LABELS,
@@ -228,15 +222,20 @@ def _parse_inflection_blocks(inflections: str) -> list[dict]:
         }[pos_tag]
 
         paradigm = {}
-        for label, seg in zip(expanded_labels, segments):
+        for label, seg, has_article in zip(expanded_labels, segments, label_has_article):
             key = label_map.get(label)
             if not key or not seg or seg == "-":
                 continue
 
-            if pos_tag == "NOUN" and key == "sg_indef" and has_article:
+            if pos_tag == "NOUN" and has_article:
                 tokens = seg.split(maxsplit=1)
                 if len(tokens) > 1:
-                    paradigm["article"] = tokens[0]
+                    # The first slot's article is the canonical one (it's
+                    # what the Norwegian shape's single `article` key
+                    # means too); a later slot's own article word (e.g.
+                    # German plural "die") is discarded, not stored.
+                    if "article" not in paradigm:
+                        paradigm["article"] = tokens[0]
                     paradigm[key] = tokens[1]
                 else:
                     paradigm[key] = seg
@@ -258,10 +257,10 @@ class DictccApiTranslateAdapter:
             raise UnsupportedPairError(f"dictcc_api does not support the ({from_lang}, {to_lang}) pair")
         lp, dir_ = pair
 
-        data = _get_json({"s": input_dict["text"], "dir": dir_, "lp": lp})
-        translations = data.get("translations", [])
-        if not translations:
-            return {"candidates": []}
+        # Query preparation (norwegian-input) only applies when Norwegian is
+        # the *source* side — no English/German article-stripping rule is
+        # established, per the translate-api spec.
+        variants = query_variants(input_dict["text"]) if from_lang == "nb" else [input_dict["text"]]
 
         # Group by (entry_type, source phrase) — translate-multi-candidate
         # D-TM1/D-TM2 — NOT by entry_type alone (the earlier approach):
@@ -279,22 +278,32 @@ class DictccApiTranslateAdapter:
         # context so it's clear which bigger expression it came from.
         text_field = "term2" if dir_ == 1 else "term1"
         source_field = "term1" if dir_ == 1 else "term2"
-        query_norm = _normalize_dictcc_phrase(input_dict["text"])
+        query_norm = normalize_dictcc_phrase(input_dict["text"])
 
         groups: dict[tuple[str | None, str], list[str]] = {}
         order: list[tuple[str | None, str]] = []
-        for entry in translations:
-            entry_type = entry.get("entry_type") or None
-            source = entry[source_field] # term2
-            key = (entry_type, source)
-            if key not in groups:
-                groups[key] = []
-                order.append(key)
-            groups[key].append(entry[text_field])
+        for variant in variants:
+            data = _get_json({"s": variant, "dir": dir_, "lp": lp})
+            for entry in data.get("translations", []):
+                entry_type = entry.get("entry_type") or None
+                source = entry[source_field]  # term2
+                key = (entry_type, source)
+                if key not in groups:
+                    groups[key] = []
+                    order.append(key)
+                groups[key].append(entry[text_field])
+
+        if not order:
+            return {"candidates": []}
 
         candidates = []
         for entry_type, source in order:
-            candidate = {"text": "/".join(groups[(entry_type, source)])}
+            # Different variants can resolve to the exact same entry —
+            # dedupe (translate-multi-candidate's own grouping key already
+            # collapses that per entry, but within one group's joined text
+            # the same translation shouldn't repeat).
+            texts = list(dict.fromkeys(groups[(entry_type, source)]))
+            candidate = {"text": "/".join(texts)}
             context_parts = []
             if entry_type:
                 context_parts.append(f"[{entry_type}]")
@@ -302,10 +311,8 @@ class DictccApiTranslateAdapter:
             # query word (stripped of dict.cc's own grammar annotations
             # like "{m}" and the verb infinitive marker "å ") — a direct
             # word match doesn't need its own text echoed back.
-            if _normalize_dictcc_phrase(source) != query_norm:
-                context_parts.append(_display_dictcc_phrase(source))
-            elif source:
-                context_parts.append(f"{source}")
+            if normalize_dictcc_phrase(source) != query_norm:
+                context_parts.append(display_dictcc_phrase(source))
 
             if context_parts:
                 candidate["context"] = " ".join(context_parts)
@@ -320,37 +327,44 @@ class DictccApiInflectAdapter:
         if pairs is None:
             raise UnsupportedPairError(f"dictcc_api does not support language {lang!r}")
 
-        # Each Norwegian-touching pair is an independent dataset — a pair
-        # with no table for this word is a normal empty result, not a
-        # failure; only every pair erroring out fails the whole lookup
-        # (dictcc-norwegian-multi-pair design.md D2), so one pair's
-        # transient hiccup doesn't sink a lookup the other pair would have
-        # answered.
+        # Each (pair, variant) combination is an independent dataset — a
+        # combination with no table for this word is a normal empty
+        # result, not a failure; only every combination erroring out fails
+        # the whole lookup (dictcc-norwegian-multi-pair design.md D2,
+        # widened by norwegian-input-normalization design D4 to cross the
+        # variant list), so one combination's transient hiccup doesn't sink
+        # a lookup another combination would have answered.
+        # Query preparation only applies to Norwegian input (no English or
+        # German article-stripping rule is established) — an `en`/`de`
+        # self-lookup applies no variant fan-out.
+        variants = query_variants(word) if lang == "nb" else [word]
+        triples = [(lp, dir_, variant) for lp, dir_ in pairs for variant in variants]
+
         candidates: list[dict] = []
         seen: set[tuple] = set()
         errors: list[ProviderLookupError] = []
-        for lp, dir_ in pairs:
+        for lp, dir_, variant in triples:
             try:
-                data = _get_json({"s": word, "dir": dir_, "lp": lp})
+                data = _get_json({"s": variant, "dir": dir_, "lp": lp})
             except ProviderLookupError as exc:
                 errors.append(exc)
                 continue
             blocks = _parse_inflection_blocks(data.get("inflections"))
             for block in blocks:
                 candidate = {"lemma": word, **block}
-                # Identity for dedup is (pos, paradigm) — two pairs
+                # Identity for dedup is (pos, paradigm) — two combinations
                 # resolving to the exact same table collapse into one
                 # candidate; different paradigms for the same lemma (one
-                # pair fills a gap the other has) both survive, same as any
-                # other inflections provider's "never silently merge"
-                # philosophy.
+                # combination fills a gap another has) both survive, same
+                # as any other inflections provider's "never silently
+                # merge" philosophy.
                 key = (candidate["pos"], tuple(sorted(candidate["paradigm"].items())))
                 if key in seen:
                     continue
                 seen.add(key)
                 candidates.append(candidate)
 
-        if errors and len(errors) == len(pairs):
+        if errors and len(errors) == len(triples):
             raise errors[0]
 
         return {"candidates": candidates}
@@ -364,20 +378,26 @@ class DictccApiTtsAdapter:
             raise UnsupportedPairError(f"dictcc_api does not support language {lang!r}")
         dictcc_lang = _DICTCC_LANG_CODE[lang]
 
+        # Query preparation only applies to Norwegian input (no English or
+        # German article-stripping rule is established) — an `en`/`de`
+        # self-lookup applies no variant fan-out.
+        variants = query_variants(word) if lang == "nb" else [word]
+        triples = [(lp, dir_, variant) for lp, dir_ in pairs for variant in variants]
+
         candidates: list[dict] = []
         seen_sha: set[str] = set()
         errors: list[ProviderLookupError] = []
         with session_scope() as db:
-            for lp, dir_ in pairs:
+            for lp, dir_, variant in triples:
                 try:
-                    data = _get_json({"s": word, "dir": dir_, "lp": lp})
+                    data = _get_json({"s": variant, "dir": dir_, "lp": lp})
                     translations = data.get("translations", [])
                     if not translations:
                         continue
                     entry_id = translations[0]["id"]
 
                     human = self._fetch_audio(
-                        {"id": entry_id, "lang": f"{dictcc_lang}_rec_ip", "lp": lp, "text": word}
+                        {"id": entry_id, "lang": f"{dictcc_lang}_rec_ip", "lp": lp, "text": variant}
                     )
                     if human is not None:
                         sha256 = store(db, human, "audio/mpeg")
@@ -391,8 +411,8 @@ class DictccApiTtsAdapter:
                         if synthetic is not None:
                             sha256 = store(db, synthetic, "audio/mpeg")
                             # Content-addressed identity (audio_cache.store)
-                            # is enough dedup — two pairs resolving to
-                            # byte-identical audio collapse naturally.
+                            # is enough dedup — two combinations resolving
+                            # to byte-identical audio collapse naturally.
                             if sha256 not in seen_sha:
                                 seen_sha.add(sha256)
                                 candidates.append({"sha256": sha256, "source": "synthetic", "voice": voice})
@@ -400,7 +420,7 @@ class DictccApiTtsAdapter:
                     errors.append(exc)
                     continue
 
-        if errors and len(errors) == len(pairs):
+        if errors and len(errors) == len(triples):
             raise errors[0]
 
         return {"candidates": candidates}

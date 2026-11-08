@@ -42,3 +42,28 @@ def test_multiple_forms_sharing_one_tag_set_are_all_kept(adapter):
     result = adapter.lookup({"word": "hus", "lang": "nb"})
     noun = next(c for c in result["candidates"] if c["pos"] == "substantiv")
     assert noun["paradigm"]["pl_def"] == "husa / husene"
+
+
+def test_citation_form_resolves_bare_noun(adapter):
+    # norwegian-input-normalization task 6.2: "ei bok" resolves to bok's
+    # paradigm via the headword-match arm.
+    result = adapter.lookup({"word": "ei bok", "lang": "nb"})
+    nouns = [c for c in result["candidates"] if c["pos"] == "substantiv" and c["lemma"] == "bok"]
+    assert nouns
+
+
+def test_citation_form_resolves_via_forms_containment_arm(adapter):
+    # The `forms[]` containment arm must also take the variant predicate —
+    # "en skinner" (indefinite noun phrase around an inflected surface
+    # form) still finds "skinne" via its forms[], not just the headword arm.
+    result = adapter.lookup({"word": "en skinner", "lang": "nb"})
+    assert any(c["lemma"] == "skinne" for c in result["candidates"])
+
+
+def test_capitalised_word_still_resolves(adapter):
+    # norwegian-input-normalization task 6.4: case folding is additive,
+    # never a replacement — a capitalised headword still resolves on its
+    # as-given variant.
+    result = adapter.lookup({"word": "Mali", "lang": "nb"})
+    assert result["candidates"]
+    assert all(c["lemma"] == "Mali" for c in result["candidates"])

@@ -22,6 +22,7 @@ from sqlalchemy import text
 
 from cache import ProviderLookupError
 from db.session import session_scope
+from norwegian import query_variants
 from registry import registry
 
 # {(from, to): (pair, query_clean_column, answer_column)} — the query
@@ -50,16 +51,20 @@ class DictccStaticAdapter:
             raise UnsupportedPairError(f"dictcc_static does not support the ({from_lang}, {to_lang}) pair")
         pair, query_col, answer_col = mapping
 
+        # Query preparation only applies when Norwegian is the queried
+        # (`from`) side — a non-`nb` word is used exactly as given.
+        variants = query_variants(input_dict["text"]) if from_lang == "nb" else [input_dict["text"]]
+
         with session_scope() as db:
             rows = db.execute(
                 text(
                     f"""
                     SELECT {answer_col}, pos, tags FROM dictcc_static_entry
-                    WHERE pair = :pair AND {query_col} = :word
+                    WHERE pair = :pair AND {query_col} = ANY(:variants)
                     ORDER BY id
                     """
                 ),
-                {"pair": pair, "word": input_dict["text"]},
+                {"pair": pair, "variants": variants},
             ).all()
 
         if not rows:

@@ -39,13 +39,9 @@ def _extract_inflections_input(body: dict) -> dict:
 register_lookup_routes(app, "inflections", _extract_inflections_input)
 
 
-def _extract_ipa_input(body: dict) -> dict:
-    if "text" not in body or "lang" not in body:
-        raise ValueError("text and lang are required")
-    return {"text": body["text"], "lang": body["lang"]}
+from routes.ipa import register_ipa_routes  # noqa: E402
 
-
-register_lookup_routes(app, "ipa", _extract_ipa_input)
+register_ipa_routes(app)
 
 
 def _extract_tts_input(body: dict) -> dict:

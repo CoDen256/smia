@@ -21,6 +21,7 @@ from __future__ import annotations
 from sqlalchemy import text
 
 from db.session import session_scope
+from norwegian import query_variants
 from registry import registry
 
 _ARTICLE_FOR_GENDER = {"m": "en", "f": "ei", "n": "et"}
@@ -113,37 +114,47 @@ _BUILDERS = {
 class KaikkiAdapter:
     def lookup(self, input_dict: dict) -> dict:
         word = input_dict["word"]
+        variants = query_variants(word)
         # Reverse lookup must match either the headword itself or any
         # inflected surface form kaikki lists under it — kaikki only
         # records forms[] entries that *differ* from the headword, so a
         # plain `word = :word` would miss every inflected query (e.g.
         # "skinner" only shows up inside "skinne"'s forms[], never as its
-        # own kaikki_entry.word).
+        # own kaikki_entry.word). Both arms take the same variant-list
+        # predicate (design D5).
         with session_scope() as db:
             rows = db.execute(
                 text(
                     """
                     SELECT e.word, e.pos, e.gender, e.forms
                     FROM kaikki_entry e
-                    WHERE e.word = :word
+                    WHERE e.word = ANY(:variants)
                        OR EXISTS (
                            SELECT 1 FROM jsonb_array_elements(e.forms) f
-                           WHERE f->>'form' = :word
+                           WHERE f->>'form' = ANY(:variants)
                        )
                     """
                 ),
-                {"word": word},
+                {"variants": variants},
             ).all()
 
         candidates = []
+        seen: set[tuple] = set()
         for w, pos, gender, forms in rows:
             mapping = _BUILDERS.get(pos)
             if mapping is None:
-                candidates.append({"lemma": w, "pos": pos, "paradigm": {}})
+                candidate = {"lemma": w, "pos": pos, "paradigm": {}}
+            else:
+                shape_pos, builder = mapping
+                paradigm = builder(w, gender, forms) if pos == "noun" else builder(w, forms)
+                candidate = {"lemma": w, "pos": shape_pos, "paradigm": paradigm}
+            # Two variants hitting the same lemma/pos/paradigm collapse
+            # into one candidate (design D4).
+            key = (candidate["lemma"], candidate["pos"], tuple(sorted(candidate["paradigm"].items())))
+            if key in seen:
                 continue
-            shape_pos, builder = mapping
-            paradigm = builder(w, gender, forms) if pos == "noun" else builder(w, forms)
-            candidates.append({"lemma": w, "pos": shape_pos, "paradigm": paradigm})
+            seen.add(key)
+            candidates.append(candidate)
 
         return {"candidates": candidates}
 

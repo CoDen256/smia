@@ -38,6 +38,7 @@ from __future__ import annotations
 from sqlalchemy import text
 
 from db.session import session_scope
+from norwegian import query_variants
 from registry import registry
 
 # BOY_GRUPPE -> (pos, {ordbok_tekst: output_key})
@@ -110,23 +111,32 @@ def _pos_for(ordklasse: str) -> str:
 class OrdbankAdapter:
     def lookup(self, input_dict: dict) -> dict:
         word = input_dict["word"]
+        variants = query_variants(word)
         with session_scope() as db:
             pairs = db.execute(
                 text(
                     """
                     SELECT DISTINCT lemma_id, paradigme_id
                     FROM ordbank_fullform
-                    WHERE oppslag = :word
+                    WHERE oppslag = ANY(:variants)
                     """
                 ),
-                {"word": word},
+                {"variants": variants},
             ).all()
 
             candidates = []
+            seen: set[tuple] = set()
             for lemma_id, paradigme_id in pairs:
                 candidate = self._build_candidate(db, lemma_id, paradigme_id)
-                if candidate is not None:
-                    candidates.append(candidate)
+                if candidate is None:
+                    continue
+                # Two variants hitting the same lemma/pos/paradigm collapse
+                # into one candidate (design D4).
+                key = (candidate["lemma"], candidate["pos"], tuple(sorted(candidate["paradigm"].items())))
+                if key in seen:
+                    continue
+                seen.add(key)
+                candidates.append(candidate)
 
         return {"candidates": candidates}
 

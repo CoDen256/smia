@@ -25,7 +25,12 @@ _KALV_RESPONSE = {
          "subj_ids": ",25,", "vt_usage": 0, "sort_num": 16}
     ],
     "dir": 2,
-    "inflections": "<tr>...</tr>",
+    "inflections": (
+        '<tr title="article indefinite.sg | definite.sg | indefinite.pl | definite.pl">'
+        '<td valign="top"></td><td valign="top"><b>NOUN</b>&nbsp;&nbsp;</td>'
+        '<td width="95%" > en&nbsp;kalv <span class="infl_pipe">|</span> kalven '
+        '<span class="infl_pipe">|</span> kalver <span class="infl_pipe">|</span> kalvene </td></tr>'
+    ),
     "inflections_repl": (
         " en&nbsp;kalv \tkalv\t;\t kalven \tkalven\t;\t kalver \tkalver\t;\t kalvene \tkalvene\t;\t"
     ),
@@ -37,7 +42,11 @@ _HAUS_RESPONSE = {
     "translations": [{"id": 67085, "term1": "Haus {n}", "term2": "hus {n}", "entry_type": "noun",
                        "subj_ids": "", "vt_usage": 28, "sort_num": 16}],
     "dir": 1,
-    "inflections": "<tr>...</tr>",
+    "inflections": (
+        '<tr title="article sg | article pl">'
+        '<td valign="top"></td><td valign="top"><b>NOUN</b>&nbsp;&nbsp;</td>'
+        '<td width="95%" > das&nbsp;Haus <span class="infl_pipe">|</span> die&nbsp;Häuser </td></tr>'
+    ),
     "inflections_repl": " das&nbsp;Haus \tHaus\t;\t die&nbsp;Häuser \tHäuser\t;\t",
     "inflections_info": "<br><b>NOUN</b>&nbsp;&nbsp;article sg | article pl",
 }
@@ -46,7 +55,15 @@ _HAUS_RESPONSE = {
 _GEHEN_RESPONSE = {
     "translations": [],
     "dir": 1,
-    "inflections": "<tr>...</tr>",
+    "inflections": (
+        '<tr title="article sg | article pl">'
+        '<td valign="top"></td><td valign="top"><b>NOUN</b>&nbsp;&nbsp;</td>'
+        '<td width="95%" > das&nbsp;Gehen <span class="infl_pipe">|</span> - </td></tr>'
+        '<tr title="infinitive | preterite | pp">'
+        '<td valign="top"></td><td valign="top"><b>VERB</b>&nbsp;&nbsp;</td>'
+        '<td width="95%" > gehen <span class="infl_pipe">|</span> ging '
+        '<span class="infl_pipe">|</span> gegangen </td></tr>'
+    ),
     "inflections_repl": (
         " das&nbsp;Gehen \tGehen\t;\t - \t-\t;\t gehen \tgehen\t;\t ging \tging\t;\t gegangen \tgegangen\t;\t"
     ),
@@ -394,3 +411,146 @@ def test_tts_en_de_still_query_exactly_one_pair(monkeypatch):
     with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
         DictccApiTtsAdapter().lookup({"text": "Haus", "lang": "de"})
     assert calls == ["DEEN"]
+
+
+# ---------------------------------------------------------------------------
+# norwegian-input-normalization: query-variant fan-out (tasks 5.1-5.7)
+# ---------------------------------------------------------------------------
+
+# Real (not placeholder) inflection HTML, same pattern as _HUS_RESPONSE,
+# needed because `_parse_inflection_blocks` matches on a real `title="..."`
+# attribute.
+_KALV_HTML_RESPONSE = {
+    "translations": [{"id": 528676, "term1": "calf", "term2": "kalv {m}", "entry_type": "noun",
+                       "subj_ids": "", "vt_usage": 0, "sort_num": 16}],
+    "dir": 2,
+    "inflections": (
+        '<tr title="article indefinite.sg | definite.sg | indefinite.pl | definite.pl">'
+        '<td valign="top"></td><td valign="top"><b>NOUN</b>&nbsp;&nbsp;</td>'
+        '<td width="95%" > en&nbsp;kalv <span class="infl_pipe">|</span> kalven '
+        '<span class="infl_pipe">|</span> kalver <span class="infl_pipe">|</span> kalvene </td></tr>'
+    ),
+    "inflections_repl": "",
+    "inflections_info": "",
+}
+
+# A second, deliberately different paradigm (distinct sg_def) so a variant
+# resolving to this must survive as its own candidate rather than collapse.
+_KALV_HTML_RESPONSE_DIFFERENT = {
+    "translations": [{"id": 1, "term1": "calf", "term2": "kalv {m}", "entry_type": "noun",
+                       "subj_ids": "", "vt_usage": 0, "sort_num": 16}],
+    "dir": 2,
+    "inflections": (
+        '<tr title="article indefinite.sg | definite.sg | indefinite.pl | definite.pl">'
+        '<td valign="top"></td><td valign="top"><b>NOUN</b>&nbsp;&nbsp;</td>'
+        '<td width="95%" > en&nbsp;kalv <span class="infl_pipe">|</span> ZZZ '
+        '<span class="infl_pipe">|</span> kalver <span class="infl_pipe">|</span> kalvene </td></tr>'
+    ),
+    "inflections_repl": "",
+    "inflections_info": "",
+}
+
+
+def test_inflect_citation_form_issues_four_requests_and_resolves_bare_lemma():
+    seen = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        seen.append((params["lp"], params["s"]))
+        return _mock_response(_KALV_HTML_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiInflectAdapter().lookup({"word": "en kalv", "lang": "nb"})
+
+    assert len(seen) == 4  # 2 pairs x 2 variants ("en kalv", "kalv")
+    assert sorted(s for _lp, s in seen) == ["en kalv", "en kalv", "kalv", "kalv"]
+    assert result["candidates"] == [{
+        "lemma": "en kalv", "pos": "substantiv",
+        "paradigm": {"article": "en", "sg_indef": "kalv", "sg_def": "kalven", "pl_indef": "kalver", "pl_def": "kalvene"},
+    }]
+
+
+def test_inflect_single_lowercase_word_still_issues_two_requests():
+    seen = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        seen.append(params["s"])
+        return _mock_response(_KALV_HTML_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        DictccApiInflectAdapter().lookup({"word": "kalv", "lang": "nb"})
+
+    assert seen == ["kalv", "kalv"]
+
+
+def test_inflect_variants_resolving_to_same_paradigm_collapse_to_one_candidate():
+    with patch("adapters.dictcc_api.requests.get", return_value=_mock_response(_KALV_HTML_RESPONSE)):
+        result = DictccApiInflectAdapter().lookup({"word": "en kalv", "lang": "nb"})
+    assert len(result["candidates"]) == 1
+
+
+def test_inflect_variants_resolving_to_different_paradigms_both_survive():
+    def fake_get(url, params=None, headers=None, timeout=None):
+        if params["s"] == "en kalv":
+            return _mock_response(_KALV_HTML_RESPONSE)
+        return _mock_response(_KALV_HTML_RESPONSE_DIFFERENT)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiInflectAdapter().lookup({"word": "en kalv", "lang": "nb"})
+    assert len(result["candidates"]) == 2
+
+
+def test_inflect_one_triple_failing_others_succeed_still_returns_candidates():
+    def fake_get(url, params=None, headers=None, timeout=None):
+        if params["lp"] == "DENO" and params["s"] == "en kalv":
+            raise requests.RequestException("boom")
+        return _mock_response(_KALV_HTML_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiInflectAdapter().lookup({"word": "en kalv", "lang": "nb"})
+    assert result["candidates"]
+
+
+def test_inflect_every_triple_failing_raises():
+    def fake_get(url, params=None, headers=None, timeout=None):
+        raise requests.RequestException("boom")
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        with pytest.raises(ProviderLookupError):
+            DictccApiInflectAdapter().lookup({"word": "en kalv", "lang": "nb"})
+
+
+_KOMME_DE_RESPONSE = {
+    "translations": [
+        {"id": 1, "term1": "kommen", "term2": "å komme", "entry_type": "verb",
+         "subj_ids": "", "vt_usage": 0, "sort_num": 14},
+    ],
+    "dir": 2, "inflections": "", "inflections_repl": "", "inflections_info": "",
+}
+
+
+def test_translate_infinitive_resolves_and_context_names_matched_phrase():
+    seen = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        seen.append(params["s"])
+        return _mock_response(_KOMME_DE_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        result = DictccApiTranslateAdapter().lookup({"text": "å komme", "from": "nb", "to": "de"})
+
+    assert seen == ["å komme", "komme"]
+    assert result["candidates"]
+    assert result["candidates"][0]["text"] == "kommen"
+
+
+def test_translate_from_en_or_de_applies_no_variant_fan_out():
+    seen = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        seen.append(params["s"])
+        return _mock_response(_KOMME_DE_RESPONSE)
+
+    with patch("adapters.dictcc_api.requests.get", side_effect=fake_get):
+        DictccApiTranslateAdapter().lookup({"text": "komme", "from": "de", "to": "nb"})
+
+    assert seen == ["komme"]

@@ -313,3 +313,21 @@ then be served by `GET /ipa/{id}` until evicted — acceptable, or clear the
   Worth checking during implementation, because if it turns out to hold many
   multi-word entries, the phrase branch matters more for the
   best-quality provider than the other four suggest.
+  **Measured (task 1.2):** `SELECT count(*) FROM nst_lexicon WHERE wordform
+  LIKE '% %'` and the same against `nst_dialect` both return **0** —
+  `nst` has no multi-word entries at all. The phrase branch does not matter
+  for it; the split branch carries all of its multi-word traffic, same as
+  wikipron.
+- **Live-checked (task 7.2):** `POST /ipa {text: "god morgen"}` against all
+  five providers (`nst`, `ipadict`, `wikipron`, `kaikki`, `ordbokene`)
+  returns `mode: "per_word"` with 2 tokens for every one of them — none
+  holds `"god morgen"` as a whole-phrase entry, confirming the phrase
+  branch is the minority path in practice, not just by the dataset counts
+  in the Context section above.
+- **Recorded (task 7.4):** since this change, `/ipa`'s `health`/`/providers`
+  request and failure counters are token-denominated (design D4) — a phrase
+  request now increments the counter once per token (plus once per
+  whole-phrase variant attempt), not once per request. `/health` and `/ui`
+  `/ipa` numbers from before this change are not comparable to numbers
+  after it. This is cosmetic per D4: the counters are explicitly
+  informational and never influence routing.

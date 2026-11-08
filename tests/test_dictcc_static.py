@@ -61,3 +61,18 @@ def test_unknown_word_returns_empty_candidates(adapter):
 def test_unsupported_pair_raises(adapter):
     with pytest.raises(UnsupportedPairError):
         adapter.lookup({"text": "hus", "from": "nb", "to": "fr"})
+
+
+def test_citation_form_resolves_bare_noun(adapter):
+    # norwegian-input-normalization task 6.3: "et hus" resolves to the
+    # translations filed under "hus" via the `= ANY(:variants)` predicate.
+    result = adapter.lookup({"text": "et hus", "from": "nb", "to": "en"})
+    assert any(c["text"].lower() == "house" for c in result["candidates"])
+
+
+def test_capitalised_word_still_resolves(adapter):
+    # norwegian-input-normalization task 6.4: case folding is additive,
+    # never a replacement — a capitalised headword still resolves on its
+    # as-given variant.
+    result = adapter.lookup({"text": "Aage", "from": "nb", "to": "en"})
+    assert result["candidates"]
