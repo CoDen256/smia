@@ -22,6 +22,11 @@ Full service design: `tun/docs/06-smia.md`.
   phonemic-only and often unavailable, espeak always answers but is mediocre).
 - Provider chains are declarative config, not code paths.
 
-## Status
 
-Not implemented.
+## OpenSpec / Opsx Workflow Rules
+
+- **Post-Operation Commit:** Always create a Git commit after running any `opsx` operation.
+- **Walkthrough Requirement for `opsx:apply`:** After executing `opsx:apply`, provide a concise, step-by-step walkthrough covering:
+  - **UI / Visual Checks:** What key elements or changes to look for in the user interface (high-level, not overly detailed).
+  - **Data / Storage Verification:** Where to poke around outside of the codebase (e.g., database tables, local storage, API endpoints, logs).
+  - **Testing & Checkout:** Key terminal commands to run and specific UI flows/interactions to manually test.
