@@ -19,6 +19,19 @@ AUTH_TOKEN_ENV = "SMIA_AUTH_TOKEN"
 def register_auth(app):
     @app.before_request
     def _require_bearer_token():
+        # A browser's CORS preflight OPTIONS request never carries the
+        # Authorization header (that's the point of a preflight — it asks
+        # permission before sending the real request with its real
+        # headers), so this check must not run against it. Flask-CORS's
+        # own after_request hook is what actually answers the preflight
+        # with the right access-control-* headers; this just needs to get
+        # out of its way. Without this, every cross-origin caller (e.g.
+        # hover-translate's content script, D143) fails at the network/CORS
+        # layer before a single real request is ever sent, regardless of
+        # token validity.
+        if request.method == "OPTIONS":
+            return None
+
         # /ui's static HTML/CSS/JS must load unauthenticated — that's where
         # an operator pastes the token in the first place (D46's
         # database-exploration UI, chicken-and-egg otherwise). The data
