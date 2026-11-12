@@ -12,7 +12,7 @@ fallback, expensive enough to cache*.
 |---|---|
 | `POST /inflect` | Norsk ordbank (local import) — returns **candidates**, never one answer |
 | `POST /ipa` | naob.no → open-dict-data ipa-lookup/nb → espeak-ng g2p |
-| `POST /tts` | Forvo → deno.dict.cc → cloud TTS → piper. Returns **bytes** |
+| `POST /tts` | pygmalion (local human recordings, 180 words × 7 dialects; `voice` = dialect) → Forvo → deno.dict.cc → cloud TTS → piper. Returns **bytes** |
 | `POST /stt` | cloud only (self-hosted whisper dropped as too heavy) |
 | `POST /translate` | lifted from hover-translate + DeepL / LibreTranslate |
 | `GET /ui` | provider health, cache hit rate, quota, manual try-it |

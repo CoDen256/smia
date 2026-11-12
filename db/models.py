@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import datetime
 
-from sqlalchemy import DateTime, Integer, LargeBinary, Text, UniqueConstraint, func
+from sqlalchemy import DateTime, Index, Integer, LargeBinary, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -273,3 +273,21 @@ class DictccStaticEntry(Base):
     term2_clean: Mapped[str] = mapped_column(Text, nullable=False)
     pos: Mapped[str] = mapped_column(Text, nullable=False)
     tags: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class PygmalionAudio(Base):
+    """The `pygmalion` /tts provider's word -> recording map (pygmalion-tts-
+    provider D2). One row per recording: `word` is casefolded (exactly what
+    the adapter matches), `dialect` keeps its original spelling (it is
+    returned as the candidate's `voice`), `take` orders a word's recordings
+    within one dialect. The mp3 bytes live once in `tts_audio`, keyed by
+    `sha256`; there is deliberately no foreign key to it, because that cache
+    is a private, evictable optimisation (tts-api spec)."""
+
+    __tablename__ = "pygmalion_audio"
+    __table_args__ = (Index("ix_pygmalion_audio_word", "word"),)
+
+    word: Mapped[str] = mapped_column(Text, primary_key=True)
+    dialect: Mapped[str] = mapped_column(Text, primary_key=True)
+    take: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    sha256: Mapped[str] = mapped_column(Text, nullable=False)

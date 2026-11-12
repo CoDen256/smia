@@ -26,6 +26,7 @@ from scripts import (
     import_leipzig,
     import_nst,
     import_ordbank,
+    import_pygmalion,
     import_tatoeba,
     import_wikipron,
 )
@@ -87,6 +88,7 @@ _IMPORTS = [
     ),
     ("ipa_dict_entry", import_ipadict.run, ["providers/open-dict/nb.txt"]),
     ("wikipron_entry", import_wikipron.run, ["providers/wikipron/nob_latn_broad.tsv"]),
+    ("pygmalion_audio", import_pygmalion.run, ["providers/pygmalion/audio/manifest.jsonl"]),
     ("dictcc_static_entry", import_dictcc_static.run, _find_dictcc_static_args),
     (
         _corpus_partition_empty(["tatoeba"]),

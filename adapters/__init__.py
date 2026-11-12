@@ -15,6 +15,7 @@ from . import ordbokene  # noqa: F401
 from . import ipadict  # noqa: F401
 from . import wikipron  # noqa: F401
 from . import kaikki_tts  # noqa: F401
+from . import pygmalion_tts  # noqa: F401
 from . import google_translate  # noqa: F401
 from . import bing_translate  # noqa: F401
 from . import deepl  # noqa: F401
