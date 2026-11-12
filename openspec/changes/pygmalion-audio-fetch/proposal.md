@@ -15,10 +15,10 @@ Measured against the two files:
 |---|---|
 | Unique words | 180 (some are phrases: `la du`, `i-en`) |
 | Audio references | 2,585 |
-| **Unique mp3 files** | **1,178** (~8 MB at ~6.5 KB each) |
+| **Unique mp3 files** | **1,176** (~8 MB at ~6.5 KB each); 17 are `Slow`-speed variants |
 | Dialects with data | Oslo 2213 refs, Bergen 150, Stavanger 56, Trondheim 56, Elverum 40, Sandnessjøen 40, Malm 30 (Tromsø: always empty) |
 
-The 2,585→1,178 gap is the same word repeated across exercises; no file is
+The 2,585→1,176 gap is the same word repeated across exercises; no file is
 shared between different words or different dialects (verified).
 
 This change fetches the audio and records what was fetched. It is the data
@@ -63,7 +63,7 @@ None. No existing smia behaviour changes; the HTTP API is untouched.
 ## Impact
 
 - **New** `scripts/fetch_pygmalion_audio.py`, `tests/test_pygmalion_fetch.py`.
-- **New data**: `providers/pygmalion/audio/` (≈1,178 mp3s + `manifest.jsonl`,
+- **New data**: `providers/pygmalion/audio/` (≈1,176 mp3s + `manifest.jsonl`,
   ≈8 MB plus ≈0.3 MB).
 - `requirements-dev.txt`: `+rich`.
 - Not touched: `app.py`, `registry.py`, `adapters/`, the DB, migrations.

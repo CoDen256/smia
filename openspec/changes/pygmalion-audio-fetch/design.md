@@ -15,7 +15,7 @@ The source JSON nests every recording like this:
 Facts established by inspecting the two files and probing the server:
 
 - 408 `MP_wordpair` records → 180 unique words; 2,585 audio references →
-  **1,178 unique files**. A file is never shared between two different words
+  **1,176 unique mp3 files** (plus 2 non-mp3 entries, below). A file is never shared between two different words
   or two dialects, so a file has exactly one `(word, dialect)`.
 - 2,583 paths match `C:\CalstFiles\WordObjectContent\Norwegian\Words_MP3\<file>.mp3`.
   Two are `D:\Workspace\…\OriginalWords_Wav\anMtr_…bolig….wav` — raw WAVs in a
@@ -42,7 +42,7 @@ Facts established by inspecting the two files and probing the server:
 
 **Non-Goals:**
 - Any `/tts` behaviour, DB table, or adapter — that is `pygmalion-tts-provider`.
-- Concurrency. 1,178 small files do not justify it, and it works against
+- Concurrency. 1,176 small files do not justify it, and it works against
   politeness.
 - Converting, trimming or normalising audio. Bytes are stored as served.
 - Fetching the 2 WAV entries.
@@ -131,7 +131,7 @@ a TTS `voice` label would show.
 ### D5: Interruption safety
 
 - Manifest is rewritten **after every file** (tmp file + `os.replace`). At
-  ~300 KB × 1,178 that is negligible next to the 0.5–1 s sleep, and it makes
+  ~300 KB × 1,176 that is negligible next to the 0.5–1 s sleep, and it makes
   "continuable from any point" literally true rather than "from the last
   checkpoint".
 - On `KeyboardInterrupt`/`SIGTERM`: close the in-flight response, delete its
@@ -144,7 +144,7 @@ a TTS `voice` label would show.
 
 ```
  pygmalion audio · download                       polymetis.hf.ntnu.no
- ━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━  730/1178  62%  1.4 file/s  ETA 5:09
+ ━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━  730/1176  62%  1.4 file/s  ETA 5:09
  now   Bergen · «ledd»  Bergen_Normal_0VEPBXJ6Z5QNE27E.mp3
  ok 702   skipped 28   missing 0   failed 0   retries 3
  ── log ──────────────────────────────────────────────────────────
@@ -188,15 +188,20 @@ to build the TTS provider.
 ## Risks / Trade-offs
 
 - **Unstated rate limit** → no published limit exists, so a ~1 req/s ceiling
-  is chosen as plainly polite for ~1,178 tiny files, with backoff and
+  is chosen as plainly polite for ~1,176 tiny files, with backoff and
   `Retry-After` as the safety net. Delays are flags if it proves too slow.
 - **Upstream disappears or moves** → rows become `missing`; the run completes
   and reports them. The committed mp3s are the lasting copy.
 - **`rich` colours and redraw in odd terminals / logs** → mitigated by the
   non-TTY plain-line path.
-- **WAV-only words** → `bolig` has only the 2 skipped entries and so gets no
-  audio. Reported as a warning by `extract`; acceptable for 1 of 180 words.
-- **Manifest rewritten per file** → ~1,178 × 300 KB of writes; trivial, and
+- **Skipped WAV entries** → the two `bolig` WAVs are dropped, but `bolig` also
+  has two ordinary mp3 recordings, so no word loses all its audio (confirmed
+  by `extract`: 180 words, all present).
+- **Speed variants** → 17 files are `<Dialect>_Slow_<id>.mp3` (12 Oslo, 3 Bergen,
+  1 Elverum, 1 Trondheim); the rest are `_Normal_`. The manifest does not record
+  speed (it is recoverable from the filename in `path`). Whether the `/tts`
+  provider should surface it is decided in `pygmalion-tts-provider`.
+- **Manifest rewritten per file** → ~1,176 × 300 KB of writes; trivial, and
   buys exact resumability. Revisit only if the corpus grows by orders of
   magnitude.
 - **Immutable-file assumption** → a re-recorded file under the same basename

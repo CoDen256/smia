@@ -92,6 +92,21 @@ A response SHALL be saved only if its status is 200, its `Content-Type` starts w
 - **WHEN** a file is downloaded successfully
 - **THEN** its row has `status: "ok"`, its byte size, and the `sha256` of the saved bytes
 
+### Requirement: Only one run uses the audio directory at a time
+`extract` and `download` SHALL each take an exclusive, non-blocking advisory lock on `providers/pygmalion/audio/` for their whole run, because both rewrite the single manifest. A run that cannot take the lock SHALL print a message saying another run is in progress, change nothing, and exit with status 3 rather than raising. The lock SHALL be released when the process exits for any reason, and SHALL NOT leave a lock file behind. The manifest's temporary file SHALL have a name unique to the writing process.
+
+#### Scenario: A second download is refused
+- **WHEN** a `download` is running and a second `download` or `extract` is started on the same audio directory
+- **THEN** the second run prints that another run is in progress, exits with status 3, and does not modify the manifest
+
+#### Scenario: A crash does not wedge the directory
+- **WHEN** a run is killed without cleanup
+- **THEN** the next run acquires the lock normally
+
+#### Scenario: Concurrent manifest writes cannot collide on a temp file
+- **WHEN** two processes write the manifest at the same moment
+- **THEN** each writes its own uniquely named temporary file, so neither's rename can fail because the other consumed it
+
 ### Requirement: Progress is observable in the terminal
 The command SHALL present a live `rich` display containing a progress bar with rate and ETA, the word and dialect currently being fetched, counters for ok, skipped, missing and failed rows plus retries, and a bounded scrolling log of warnings and retries; it SHALL end with a per-dialect summary table. When standard output is not a terminal, it SHALL instead emit plain timestamped lines and no live redraw.
 

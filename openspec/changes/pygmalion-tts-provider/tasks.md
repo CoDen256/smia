@@ -39,6 +39,6 @@
 
 - [ ] 6.1 Start the service on a fresh DB; confirm the log shows the import and that `GET /providers` reports a count equal to the number of `ok` manifest rows.
 - [ ] 6.2 `POST /tts {"text":"led","lang":"nb","provider":"pygmalion"}` → candidates for the Oslo recordings of `led`; fetch one `sha256` and play the mp3.
-- [ ] 6.3 A word with a regional recording (e.g. one with `Bergen`) shows `voice: "Bergen"`; `bolig` (WAV-only, skipped by the fetch) returns `candidates: []`.
+- [ ] 6.3 A word with a regional recording (e.g. one with `Bergen`) shows `voice: "Bergen"`; a word not in the data (e.g. `hest`) returns `candidates: []`.
 - [ ] 6.4 Check `/ui`'s try-it renders the `voice` for `pygmalion` candidates; resolve design Open Question 1.
 - [ ] 6.5 Update `README.md` / any provider documentation that enumerates `/tts` providers to include `pygmalion`, noting its 180-word coverage.
