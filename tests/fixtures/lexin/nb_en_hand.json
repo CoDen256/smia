@@ -1,0 +1,300 @@
+{
+ "result": [
+  [
+   {
+    "id": 1705,
+    "sub_id": 4,
+    "type": "B-lem",
+    "text": "hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 33,
+    "type": "B-kat",
+    "text": "noun",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 63,
+    "type": "B-def",
+    "text": "the end part of an arm",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 92,
+    "type": "B-eks",
+    "text": "wash one's hands",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 122,
+    "type": "B-eks",
+    "text": "sew by hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 152,
+    "type": "B-eks",
+    "text": "walk hand in hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 186,
+    "type": "B-idi",
+    "text": "take care of (look after, etc.)",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 216,
+    "type": "B-idi",
+    "text": "gradually, by degrees (continuously)",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 248,
+    "type": "B-idi",
+    "text": "by oneself",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 278,
+    "type": "B-idi",
+    "text": "in the first place, preferably",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 283,
+    "type": "B-idi",
+    "text": "have at hand (have available and ready for use)",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 312,
+    "type": "B-idi",
+    "text": "have one's hands full",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 340,
+    "type": "B-idi",
+    "text": "fit like a glove",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 368,
+    "type": "B-idi",
+    "text": "taking the law into one's own hands",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 406,
+    "type": "B-sms",
+    "text": "hand luggage",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 1705,
+    "sub_id": 435,
+    "type": "B-sms",
+    "text": "show of hands",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 5478,
+    "sub_id": 5,
+    "type": "B-lem",
+    "text": "hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 5478,
+    "sub_id": 33,
+    "type": "B-kat",
+    "text": "noun",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 5478,
+    "sub_id": 63,
+    "type": "B-def",
+    "text": "the pointer of a clock or another meter",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 5478,
+    "sub_id": 95,
+    "type": "B-sms",
+    "text": "minute hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 5478,
+    "sub_id": 126,
+    "type": "B-sms",
+    "text": "second hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 5478,
+    "sub_id": 156,
+    "type": "B-sms",
+    "text": "hour hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 19227,
+    "sub_id": 5,
+    "type": "B-lem",
+    "text": "hind",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 19227,
+    "sub_id": 33,
+    "type": "B-kat",
+    "text": "noun",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 19227,
+    "sub_id": 63,
+    "type": "B-def",
+    "text": "a female deer",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36080,
+    "sub_id": 4,
+    "type": "B-lem",
+    "text": "hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36080,
+    "sub_id": 33,
+    "type": "B-kat",
+    "text": "noun",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36080,
+    "sub_id": 62,
+    "type": "B-def",
+    "text": "help",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36080,
+    "sub_id": 91,
+    "type": "B-kom",
+    "text": "informal",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36080,
+    "sub_id": 116,
+    "type": "B-eks",
+    "text": "give me a hand!",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36080,
+    "sub_id": 146,
+    "type": "B-sms",
+    "text": "a helping hand",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   }
+  ]
+ ],
+ "resArray": [
+  {
+   "id": 19227
+  },
+  {
+   "id": 36080
+  },
+  {
+   "id": 1705
+  },
+  {
+   "id": 5478
+  }
+ ],
+ "exactMatchFound": false
+}

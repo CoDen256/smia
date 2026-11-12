@@ -28,3 +28,6 @@ from . import tatoeba  # noqa: F401
 from . import leipzig  # noqa: F401
 from . import ordbokene_examples  # noqa: F401
 from . import kaikki_examples  # noqa: F401
+from . import lexin_translate  # noqa: F401
+from . import lexin_ipa  # noqa: F401
+from . import lexin_examples  # noqa: F401

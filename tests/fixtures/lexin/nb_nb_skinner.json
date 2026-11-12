@@ -1,0 +1,882 @@
+{
+ "result": [
+  [
+   {
+    "id": 2164,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "jern~bane",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 31,
+    "type": "E-kat",
+    "text": "substantiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 59,
+    "type": "E-def",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 60,
+    "type": "N-def",
+    "text": "en bane med skinner for tog; også om virksomheten som har ansvaret for togtrafikken",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 89,
+    "type": "E-kom",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 114,
+    "type": "E-eks",
+    "text": "krysse jernbanen",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 144,
+    "type": "E-eks",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 145,
+    "type": "N-eks",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 178,
+    "type": "E-sms",
+    "text": "jernbane~stasjon",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 209,
+    "type": "E-sms",
+    "text": "jernbane~overgang",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 238,
+    "type": "N-sms",
+    "text": "jernbane~kupé",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 266,
+    "type": "N-sms",
+    "text": "jernbane~vogn",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 300,
+    "type": "E-mor",
+    "text": "en jernbane jernbanen jernbaner jernbanene",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 2164,
+    "sub_id": 304,
+    "type": "E-utt",
+    "text": "j'æ:rnba:ne",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "skinne",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 31,
+    "type": "E-kat",
+    "text": "substantiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 59,
+    "type": "E-def",
+    "text": "et langt og smalt (metall)stykke som noe glir på; et langt, smalt stykke som brukes til å holde en skadd kroppsdel i ro",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 88,
+    "type": "E-eks",
+    "text": "tog går på skinner",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 118,
+    "type": "N-sms",
+    "text": "jernbane~skinne",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 150,
+    "type": "E-mor",
+    "text": "skinnen (el skinna) skinner skinnene",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 154,
+    "type": "E-utt",
+    "text": "sjine",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4097,
+    "sub_id": 156,
+    "type": "N-grm",
+    "text": "ofte i flertall",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "skinne",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 31,
+    "type": "E-kat",
+    "text": "verb",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 59,
+    "type": "E-def",
+    "text": "lyse, stråle",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 88,
+    "type": "E-eks",
+    "text": "sola skinte fra en skyfri himmel",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 118,
+    "type": "E-eks",
+    "text": "en skinnende blank kasserolle",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 155,
+    "type": "E-eks",
+    "text": "vannet skinte i ettermiddagssola",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 185,
+    "type": "N-eks",
+    "text": "sola skinner",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 219,
+    "type": "E-mor",
+    "text": "skinner skinte (el skein) skint",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4110,
+    "sub_id": 223,
+    "type": "E-utt",
+    "text": "sjine",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "skøyte",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 31,
+    "type": "E-kat",
+    "text": "substantiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 59,
+    "type": "E-def",
+    "text": "sko med skinner til å gå på is med",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 88,
+    "type": "E-eks",
+    "text": "de går ofte på skøyter",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 121,
+    "type": "E-sms",
+    "text": "skøyte~prinsesse",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 150,
+    "type": "N-sms",
+    "text": "skøyte~løp",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 179,
+    "type": "N-sms",
+    "text": "skøyte~løper",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 208,
+    "type": "N-sms",
+    "text": "skøyte~løping",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 238,
+    "type": "E-mor",
+    "text": "en (ei) skøyte skøyten (skøyta) skøyter skøytene",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 242,
+    "type": "E-utt",
+    "text": "sj'ø'yte",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4141,
+    "sub_id": 244,
+    "type": "N-grm",
+    "text": "oftest i flertall",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "spor",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 30,
+    "type": "N-kom",
+    "text": "pol-2",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 33,
+    "type": "E-kat",
+    "text": "substantiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 61,
+    "type": "E-def",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 62,
+    "type": "N-def",
+    "text": "skinner; en skinnegang; en smal fordypning",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 92,
+    "type": "E-kom",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 116,
+    "type": "N-eks",
+    "text": "toget kjørte av sporet",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 149,
+    "type": "E-sms",
+    "text": "jernbane~spor",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 180,
+    "type": "E-sms",
+    "text": "plate~spor",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 211,
+    "type": "E-sms",
+    "text": "side~spor",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 245,
+    "type": "E-mor",
+    "text": "sporet spor sporene (el spora)",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4446,
+    "sub_id": 250,
+    "type": "E-utt",
+    "text": "spo:r",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4447,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "trikk",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4447,
+    "sub_id": 32,
+    "type": "E-kat",
+    "text": "substantiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4447,
+    "sub_id": 60,
+    "type": "E-def",
+    "text": "en elektrisk vogn på skinner for persontrafikk, en sporvogn",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4447,
+    "sub_id": 92,
+    "type": "E-mor",
+    "text": "en trikk trikken trikker trikkene",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 4447,
+    "sub_id": 97,
+    "type": "E-utt",
+    "text": "trik",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 8589,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "skinnende",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 8589,
+    "sub_id": 31,
+    "type": "E-kat",
+    "text": "adjektiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 8589,
+    "sub_id": 59,
+    "type": "E-def",
+    "text": "som skinner, glinser eller stråler",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 8589,
+    "sub_id": 88,
+    "type": "E-eks",
+    "text": "skinnende øyne",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 8589,
+    "sub_id": 118,
+    "type": "E-eks",
+    "text": "et skinnende stoff",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 8589,
+    "sub_id": 151,
+    "type": "E-utt",
+    "text": "sjinene",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 2,
+    "type": "N-lem",
+    "text": "blank",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 30,
+    "type": "N-kom",
+    "text": "pol-3",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 32,
+    "type": "N-kat",
+    "text": "adjektiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 59,
+    "type": "N-def",
+    "text": "som skinner",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 88,
+    "type": "N-eks",
+    "text": "blankt som et speil",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 117,
+    "type": "N-eks",
+    "text": "være blank på nesen",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 146,
+    "type": "N-eks",
+    "text": "blanke sko",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 175,
+    "type": "N-eks",
+    "text": "blankt papir",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 204,
+    "type": "N-eks",
+    "text": "hunden er blank i pelsen",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 238,
+    "type": "N-mor",
+    "text": "blankt blanke",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 25182,
+    "sub_id": 242,
+    "type": "N-utt",
+    "text": "blangk",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 35188,
+    "sub_id": 2,
+    "type": "N-lem",
+    "text": "spor~vei",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 35188,
+    "sub_id": 31,
+    "type": "N-kat",
+    "text": "substantiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 35188,
+    "sub_id": 58,
+    "type": "N-def",
+    "text": "en vei med skinner for sporvogner eller trikker",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 35188,
+    "sub_id": 87,
+    "type": "N-eks",
+    "text": "sporveien er et miljøvennlig alternativ til biltrafikk",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 35188,
+    "sub_id": 117,
+    "type": "N-mor",
+    "text": "-veien -veier -veiene",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 35188,
+    "sub_id": 121,
+    "type": "N-alt",
+    "text": "spor~veg",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 35188,
+    "sub_id": 122,
+    "type": "N-utt",
+    "text": "spo:rvæ\\\\i",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "skinne~gang",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 49,
+    "type": "E-def",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 50,
+    "type": "N-def",
+    "text": "et spor med skinner som underlag for f.eks. tog",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 75,
+    "type": "E-eks",
+    "text": "toget går på skinneganger",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 95,
+    "type": "E-sms",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 116,
+    "type": "E-sms",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 130,
+    "type": "E-mor",
+    "text": "-gangen -ganger -gangene",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 135,
+    "type": "E-utt",
+    "text": "sjinegang",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 36564,
+    "sub_id": 141,
+    "type": "E-kat",
+    "text": "substantiv",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   }
+  ]
+ ],
+ "resArray": [
+  {
+   "id": 4110
+  },
+  {
+   "id": 4097
+  },
+  {
+   "id": 4446
+  },
+  {
+   "id": 25182
+  },
+  {
+   "id": 8589
+  },
+  {
+   "id": 4141
+  },
+  {
+   "id": 35188
+  },
+  {
+   "id": 36564
+  },
+  {
+   "id": 2164
+  },
+  {
+   "id": 4447
+  },
+  {
+   "id": 2754
+  },
+  {
+   "id": 34947
+  },
+  {
+   "id": 3728
+  },
+  {
+   "id": 17348
+  },
+  {
+   "id": 4361
+  }
+ ],
+ "exactMatchFound": false
+}

@@ -81,7 +81,9 @@ The leading underscore marks it as not an adapter (nothing registers from it).
 Requests carry `Origin: https://lexin.oslomet.no` and a generic User-Agent. The
 API signals a refused request as **HTTP 200** `{"err": "...", "error_exist":
 true}`. `_lexin.find` raises `ProviderLookupError` when `error_exist` is true or
-`result` is missing. Treating that as `[]` would be negative-cached by the
+`result` is missing. A refusal can also arrive as a plain **HTTP 403** (seen
+from `requests`' default client); `raise_for_status()` turns that into the same
+`ProviderLookupError`. Treating that as `[]` would be negative-cached by the
 lookup cache and hide a block for the cache lifetime.
 
 ### D3: Group by `id`, not by position
@@ -135,6 +137,18 @@ hits (`skinner` → `skinne`, `jernbane`, `skøyte`). The operator wants these k
   would simply be a wrong answer. This is the one place the "keep fuzzy" rule is
   narrowed; it is cheap to widen later.
 
+Matching inflected forms needs two normalisations, found in real `mor`
+strings:
+- A `-x` token is shorthand for the compound prefix plus `x`: for `ut~gå`,
+  `-går -gikk -gått` means `utgår utgikk utgått`.
+- Grammatical noise tokens (`å`, `en`, `ei`, `et`, `har`, `el`, `eller`, `og`)
+  and parentheses are dropped, so a query for `en` or `har` does not match every
+  noun or verb. Headwords are matched separately, so this loses nothing.
+
+For `/examples`, an entry with several definitions gets them joined with `; `
+as `sense` (the source does not say which one an example illustrates). In
+practice each sense is its own entry `id` (see Open Questions).
+
 Duplicates (identical `ipa`, or identical text/sense) are collapsed in
 first-seen order.
 
@@ -181,6 +195,8 @@ inflection handling (that is `/inflect`'s job, and LEXIN does its own matching).
 
 ## Open Questions
 
-- Does one entry ever carry several `*-def` rows meaning *different* senses?
-  D5 emits one candidate per distinct definition, which is right either way,
-  but the real-data check in tasks 6.x should confirm no sense is dropped.
+- *(Resolved in apply.)* Does one entry ever carry several `*-def` rows? Across
+  `gå`, `løpe`, `ta`, `hund`, `stå` and `avlyse` none did: each sense is a
+  separate entry `id`, so one candidate per entry is already one per sense. The
+  one-candidate-per-definition rule (translations) and `; ` join (examples) stay
+  as harmless fallbacks.

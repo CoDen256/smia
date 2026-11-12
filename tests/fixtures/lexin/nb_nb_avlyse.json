@@ -1,0 +1,300 @@
+{
+ "result": [
+  [
+   {
+    "id": 26805,
+    "sub_id": 2,
+    "type": "N-lem",
+    "text": "avlyse",
+    "index": null,
+    "pri_id": 26805,
+    "pri_text": "avlyse"
+   },
+   {
+    "id": 18211,
+    "sub_id": 32,
+    "type": "E-kat",
+    "text": "verb",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 18211,
+    "sub_id": 60,
+    "type": "E-def",
+    "text": "gå ut, stryke, kansellere, avlyse",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 18211,
+    "sub_id": 90,
+    "type": "E-eks",
+    "text": "programinnslaget utgår",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 18211,
+    "sub_id": 122,
+    "type": "E-mor",
+    "text": "-går -gikk -gått",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 18211,
+    "sub_id": 127,
+    "type": "E-utt",
+    "text": "u:tgå",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26790,
+    "sub_id": 2,
+    "type": "N-lem",
+    "text": "avblåse",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26790,
+    "sub_id": 30,
+    "type": "N-kat",
+    "text": "verb",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26790,
+    "sub_id": 57,
+    "type": "N-def",
+    "text": "stanse, stoppe, avbryte, avlyse, skrinlegge",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26790,
+    "sub_id": 85,
+    "type": "N-eks",
+    "text": "streiken ble avblåst i går",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26790,
+    "sub_id": 113,
+    "type": "N-mor",
+    "text": "avblåser avblåste avblåst",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26790,
+    "sub_id": 116,
+    "type": "N-utt",
+    "text": "a:vblå:se",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26805,
+    "sub_id": 31,
+    "type": "N-kat",
+    "text": "verb",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26805,
+    "sub_id": 58,
+    "type": "N-def",
+    "text": "innstille, stanse, stoppe, skrinlegge",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26805,
+    "sub_id": 87,
+    "type": "N-eks",
+    "text": "konserten ble avlyst",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26805,
+    "sub_id": 117,
+    "type": "N-mor",
+    "text": "å avlyse avlyser avlyste har avlyst",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 26805,
+    "sub_id": 121,
+    "type": "N-utt",
+    "text": "'a:vly:se",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 1,
+    "type": "E-lem",
+    "text": "kansellere",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 22,
+    "type": "E-kat",
+    "text": "verb",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 43,
+    "type": "E-alt",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 45,
+    "type": "E-def",
+    "text": "avlyse, avbestille, oppheve, innstille",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 66,
+    "type": "E-til",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 87,
+    "type": "E-kom",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 108,
+    "type": "E-mor",
+    "text": "å kansellere kansellerer kansellerte har kansellert",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 110,
+    "type": "E-utt",
+    "text": "kansel'e:re",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 112,
+    "type": "E-grm",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 133,
+    "type": "E-sms",
+    "text": "kansellering",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 154,
+    "type": "E-idi",
+    "text": "",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 175,
+    "type": "E-eks",
+    "text": "flyvningen ble kansellert på grunn av tekniske feil",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 18211,
+    "sub_id": 2,
+    "type": "E-lem",
+    "text": "ut~gå",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   },
+   {
+    "id": 47897,
+    "sub_id": 196,
+    "type": "E-eks",
+    "text": "kansellere en avtale",
+    "index": null,
+    "pri_id": null,
+    "pri_text": ""
+   }
+  ]
+ ],
+ "resArray": {
+  "0": {
+   "id": 26805
+  },
+  "2": {
+   "id": 47897
+  },
+  "3": {
+   "id": 26790
+  },
+  "4": {
+   "id": 18211
+  }
+ },
+ "exactMatchFound": true
+}
