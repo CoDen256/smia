@@ -68,36 +68,26 @@ class Client:
             return json.loads(gzip.decompress(cf.read_bytes()))
 
         url = urljoin(BASE, path)
-        for attempt in range(6):
-            self._sleep()
-            try:
-                r = self.s.request(
-                    method, url, data=data, timeout=30, allow_redirects=False
-                )
-            except requests.RequestException as e:
-                self.last = time.monotonic()
-                backoff = 2 ** attempt
-                print(f"  ! {e.__class__.__name__}, retry in {backoff}s", file=sys.stderr)
-                time.sleep(backoff)
-                continue
+        self._sleep()
+        try:
+            r = self.s.request(method, url, data=data, timeout=30, allow_redirects=False)
+        except requests.RequestException as e:
             self.last = time.monotonic()
-            self.network_calls += 1
-            if r.status_code == 429 or r.status_code >= 500:
-                wait = float(r.headers.get("Retry-After", 2 ** attempt))
-                print(f"  ! HTTP {r.status_code}, retry in {wait}s", file=sys.stderr)
-                time.sleep(wait)
-                continue
-            rec = {
-                "status": r.status_code,
-                "location": r.headers.get("Location"),
-                "body": r.text,
-            }
-            CACHE_DIR.mkdir(parents=True, exist_ok=True)
-            tmp = cf.with_suffix(".tmp")
-            tmp.write_bytes(gzip.compress(json.dumps(rec).encode()))
-            tmp.replace(cf)
-            return rec
-        raise RuntimeError(f"giving up on {method} {url}")
+            raise RuntimeError(f"{e.__class__.__name__} on {method} {url}") from e
+        self.last = time.monotonic()
+        self.network_calls += 1
+        if r.status_code == 429 or r.status_code >= 500:
+            raise RuntimeError(f"HTTP {r.status_code} on {method} {url}")
+        rec = {
+            "status": r.status_code,
+            "location": r.headers.get("Location"),
+            "body": r.text,
+        }
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = cf.with_suffix(".tmp")
+        tmp.write_bytes(gzip.compress(json.dumps(rec).encode()))
+        tmp.replace(cf)
+        return rec
 
 
 # ------------------------------------------------------------------ HTML walk
@@ -303,25 +293,45 @@ def main() -> None:
     print(f"exercises: {len(index)} (fetching {len(todo)} x {len(args.types)} types)")
 
     exercises = []
+    skipped = []
     for n, ex in enumerate(todo, 1):
-        results = {}
-        for t in args.types:
-            rec = c.request(
-                "POST",
-                "/Exercises/Details",
-                {
-                    "ExerciseId": ex["exercise_id"],
-                    "wrid": ex["wrid"],
-                    "vwrid": ex["vwrid"],
-                    "Type": t,
-                },
-            )
-            res = {"status": rec["status"], "location": rec["location"], "bytes": len(rec["body"])}
-            if rec["status"] == 200:
-                res.update(parse_details(rec["body"]))
-                if not res["variables"]:
-                    res["body_head"] = rec["body"][:300]  # unexpected shape, keep a hint
-            results[t] = res
+        results, last_exc = None, None
+        for attempt in range(1, 3):
+            try:
+                results = {}
+                for t in args.types:
+                    rec = c.request(
+                        "POST",
+                        "/Exercises/Details",
+                        {
+                            "ExerciseId": ex["exercise_id"],
+                            "wrid": ex["wrid"],
+                            "vwrid": ex["vwrid"],
+                            "Type": t,
+                        },
+                    )
+                    res = {
+                        "status": rec["status"],
+                        "location": rec["location"],
+                        "bytes": len(rec["body"]),
+                    }
+                    if rec["status"] == 200:
+                        res.update(parse_details(rec["body"]))
+                        if not res["variables"]:
+                            res["body_head"] = rec["body"][:300]  # unexpected shape, keep a hint
+                    results[t] = res
+                break
+            except Exception as e:
+                last_exc = e
+                results = None
+                print(
+                    f"  ! ex={ex['exercise_id']} wrid={ex['wrid']} attempt {attempt}/2 failed: {e}",
+                    file=sys.stderr,
+                )
+        if results is None:
+            skipped.append({**ex, "error": str(last_exc)})
+            print(f"[{n}/{len(todo)}] ex={ex['exercise_id']} wrid={ex['wrid']} SKIPPED after 2 failed attempts")
+            continue
         exercises.append({**ex, "types": results})
         got = {t: sum(len(v) for v in r.get("variables", {}).values()) for t, r in results.items()}
         print(f"[{n}/{len(todo)}] ex={ex['exercise_id']} wrid={ex['wrid']} {got}")
@@ -337,11 +347,15 @@ def main() -> None:
         },
         "lessons": lessons,
         "exercises": exercises,
+        "skipped": skipped,
     }
     tmp = OUT_FILE.with_suffix(".tmp")
     tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(OUT_FILE)
-    print(f"wrote {OUT_FILE} ({OUT_FILE.stat().st_size / 1e6:.1f} MB); network calls: {c.network_calls}")
+    print(
+        f"wrote {OUT_FILE} ({OUT_FILE.stat().st_size / 1e6:.1f} MB); "
+        f"network calls: {c.network_calls}; skipped: {len(skipped)}"
+    )
 
 
 if __name__ == "__main__":
